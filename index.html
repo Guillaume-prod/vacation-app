@@ -1,0 +1,658 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="theme-color" content="#1a56a0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Vacation MLH" />
+<title>Compte rendu de vacation – La Poste MLH</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --jaune: #FFD700; --jaune-pale: #FFF8DC;
+  --bleu: #1a56a0; --bleu-fonce: #0f3a72; --bleu-clair: #e8f0fb;
+  --gris: #f4f6f9; --gris-bord: #dde3ed;
+  --texte: #1a1f2e; --texte-doux: #5a6478;
+  --vert: #16a34a; --vert-pale: #dcfce7;
+  --rouge: #dc2626; --rouge-pale: #fee2e2;
+  --orange: #d97706; --orange-pale: #fef3c7;
+  --violet: #7c3aed; --violet-pale: #ede9fe;
+  --radius: 14px; --ombre: 0 2px 12px rgba(26,86,160,0.10);
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--gris); color: var(--texte); min-height: 100vh; max-width: 480px; margin: 0 auto; }
+.header { background: var(--bleu); padding: 18px 20px 14px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; }
+.header-logo { display: flex; align-items: center; gap: 10px; }
+.logo-box { width: 36px; height: 36px; background: var(--jaune); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.header-title { color: white; font-weight: 700; font-size: 16px; line-height: 1.1; }
+.header-sub { color: rgba(255,255,255,0.65); font-size: 11px; }
+.btn-deconnexion { background: rgba(255,255,255,0.15); border: none; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+.nav-bas { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; border-top: 1px solid var(--gris-bord); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0 8px; gap: 3px; cursor: pointer; border: none; background: none; color: var(--texte-doux); font-size: 10px; font-weight: 500; }
+.nav-item.active { color: var(--bleu); }
+.nav-icon { font-size: 22px; }
+.content { padding: 16px 16px 90px; }
+.card { background: white; border-radius: var(--radius); box-shadow: var(--ombre); padding: 18px; margin-bottom: 14px; }
+.card-title { font-size: 13px; font-weight: 700; color: var(--texte-doux); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
+.equipe-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 12px; }
+.equipe-badge.Concentration { background: var(--bleu-clair); color: var(--bleu); }
+.equipe-badge.Soirée { background: var(--violet-pale); color: var(--violet); }
+.equipe-badge.Nuit { background: #1a1f2e; color: white; }
+.equipe-badge.none { background: var(--gris); color: var(--texte-doux); }
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.badge.en_cours { background: var(--orange-pale); color: var(--orange); }
+.badge.terminee { background: var(--vert-pale); color: var(--vert); }
+.type-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.type-btn { padding: 16px 10px; border: 2px solid var(--gris-bord); border-radius: 12px; background: white; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; color: var(--texte); line-height: 1.4; }
+.type-btn:active { transform: scale(0.97); }
+.demande-item { border: 1px solid var(--gris-bord); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.demande-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.demande-type { font-weight: 700; font-size: 14px; }
+.demande-dates { font-size: 12px; color: var(--texte-doux); margin-top: 2px; }
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--texte-doux); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+.form-input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--gris-bord); border-radius: 10px; font-size: 14px; background: white; color: var(--texte); font-family: inherit; outline: none; }
+.form-input:focus { border-color: var(--bleu); }
+textarea.form-input { resize: none; }
+.btn-primary { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--bleu); color: white; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-mic { width: 100%; padding: 13px; border-radius: 10px; border: 2px solid var(--bleu); background: var(--bleu-clair); color: var(--bleu); font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; margin-bottom: 10px; display:flex; align-items:center; justify-content:center; gap:8px; }
+.btn-mic.listening { background: var(--rouge-pale); border-color: var(--rouge); color: var(--rouge); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+.login-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; background: var(--bleu); }
+.login-logo { width: 72px; height: 72px; background: var(--jaune); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 38px; margin-bottom: 16px; }
+.login-title { color: white; font-size: 22px; font-weight: 800; margin-bottom: 4px; text-align:center; }
+.login-sub { color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 32px; }
+.login-card { background: white; border-radius: 18px; padding: 24px; width: 100%; max-width: 360px; }
+.toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #1a1f2e; color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 999; max-width: 320px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: slideDown 0.2s ease; }
+.toast.ok { background: var(--vert); }
+.toast.err { background: var(--rouge); }
+@keyframes slideDown { from { transform: translateX(-50%) translateY(-10px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+.admin-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
+.admin-tab { flex-shrink: 0; padding: 9px 12px; border-radius: 9px; border: 1.5px solid var(--gris-bord); background: white; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--texte-doux); }
+.admin-tab.active { border-color: var(--bleu); background: var(--bleu); color: white; }
+.filtre-equipes { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; }
+.filtre-btn { flex-shrink: 0; padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--gris-bord); background: white; font-size: 11px; font-weight: 600; cursor: pointer; color: var(--texte-doux); }
+.filtre-btn.active { border-color: var(--bleu); background: var(--bleu-clair); color: var(--bleu); }
+.empty-state { text-align: center; padding: 40px 20px; color: var(--texte-doux); font-size: 14px; }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+.loader { text-align: center; padding: 40px; color: var(--texte-doux); }
+.info-banner { background: var(--bleu-clair); border-radius: 10px; padding: 11px 14px; font-size: 12px; color: var(--bleu-fonce); margin-bottom: 14px; line-height: 1.5; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
+.modal { background: white; border-radius: 18px 18px 0 0; padding: 24px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+.modal-btns { display: flex; gap: 10px; margin-top: 16px; }
+.btn-annuler { flex: 1; padding: 13px; border-radius: 10px; border: 1.5px solid var(--gris-bord); background: white; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--texte-doux); }
+.agent-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--gris); cursor: pointer; }
+.agent-item:last-child { border-bottom: none; }
+.agent-name { font-weight: 600; font-size: 14px; }
+.agent-code { font-size: 11px; color: var(--texte-doux); font-family: monospace; }
+.timeline-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--gris); }
+.timeline-time { font-weight: 700; font-size: 12px; color: var(--bleu); flex-shrink: 0; width: 42px; }
+.timeline-content { flex: 1; font-size: 13px; }
+.cat-section { margin-bottom: 16px; }
+.cat-header { font-weight: 700; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.cat-item { font-size: 13px; padding: 8px 10px; background: var(--gris); border-radius: 8px; margin-bottom: 6px; }
+.changer-mdp-link { text-align: center; margin-top: 14px; }
+.changer-mdp-link button { background: none; border: none; color: var(--bleu); font-size: 13px; cursor: pointer; text-decoration: underline; }
+.view-toggle { display: flex; gap: 6px; margin-bottom: 14px; }
+.view-toggle button { flex: 1; padding: 8px; border-radius: 8px; border: 1.5px solid var(--gris-bord); background: white; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--texte-doux); }
+.view-toggle button.active { border-color: var(--bleu); background: var(--bleu-clair); color: var(--bleu); }
+.lien-danger { background: none; border: none; color: var(--rouge); font-size: 13px; cursor: pointer; text-decoration: underline; }
+.evt-photo { width: 100%; border-radius: 10px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const SUPABASE_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_dES9U1T02LLNFXtR2RgtLg_b4UWK5cv';
+const EQUIPES = ['Concentration', 'Soirée', 'Nuit'];
+const ORDRE_EQUIPES = {Concentration:'Nuit', Soirée:'Concentration', Nuit:'Soirée'}; // équipe précédente
+const TYPES_EVT = {
+  liaison: {icon:'🚛', label:'Liaison', couleur:'#1a56a0'},
+  colis: {icon:'📦', label:'Colis', couleur:'#d97706'},
+  incident: {icon:'⚠️', label:'Incident', couleur:'#dc2626'},
+  anomalie: {icon:'🔧', label:'Anomalie', couleur:'#7c3aed'},
+};
+
+async function sbFetch(method, path, body){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': method==='POST' ? 'return=representation' : 'return=minimal'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if(!res.ok){ const e = await res.json().catch(()=>{}); throw new Error(e?.message||'Erreur'); }
+  const t = await res.text(); return t ? JSON.parse(t) : [];
+}
+const db = {
+  get: (t,q='') => sbFetch('GET',`${t}?${q}`),
+  post: (t,d) => sbFetch('POST',t,d),
+  patch: (t,q,d) => sbFetch('PATCH',`${t}?${q}`,d),
+  delete: (t,q) => sbFetch('DELETE',`${t}?${q}`),
+};
+
+let S = {
+  agent:null, vue:'vacation', adminTab:'vacations', filtreEquipe:'Toutes',
+  vacationActive:null, evenementsVacation:[], dernierCREquipePrecedente:null,
+  toutesVacations:[], tousAgents:[], compteRenduActuel:null, vueCR:'categorie',
+  modal:null, evtTexte:'', evtPhoto:null, loading:false, editAgentId:null,
+};
+
+function dateLocale(d){const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const dd=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${dd}`;}
+function toast(msg,type='ok'){const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),3500);}
+function equipeBadge(eq){
+  const e=eq||'—'; const cls=EQUIPES.includes(e)?e:'none';
+  const icons={Concentration:'☀️',Soirée:'🌆',Nuit:'🌙'};
+  return `<span class="equipe-badge ${cls}">${icons[e]||'👤'} ${e}</span>`;
+}
+function fmtDateTime(iso){ if(!iso) return '—'; return new Date(iso).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+function fmtHeure(iso){ return new Date(iso).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
+
+function render(){
+  const app=document.getElementById('app');
+  if(!S.agent){app.innerHTML=renderLogin();return;}
+  let modalHtml='';
+  if(S.modal && S.modal.startsWith('evenement-')) modalHtml=renderModalEvenement(S.modal.replace('evenement-',''));
+  else if(S.modal==='compte-rendu') modalHtml=renderModalCompteRendu();
+  else if(S.modal==='changer-code') modalHtml=renderModalChangerCode();
+  else if(S.modal==='edit-agent') modalHtml=renderModalEditAgent();
+  app.innerHTML=`${renderHeader()}<div class="content">${S.loading?'<div class="loader">⏳ Chargement...</div>':renderVue()}</div>${renderNav()}${modalHtml}`;
+}
+
+function renderHeader(){
+  return `<header class="header">
+    <div class="header-logo"><div class="logo-box">🎙️</div>
+    <div><div class="header-title">Vacation – La Poste</div><div class="header-sub">${S.agent.prenom} ${S.agent.nom}</div></div></div>
+    <button class="btn-deconnexion" onclick="deconnexion()">Déconnexion</button>
+  </header>`;
+}
+function renderNav(){
+  const items=S.agent.est_responsable
+    ?[['vacation','🎙️','Vacation'],['admin','⚙️','Admin']]
+    :[['vacation','🎙️','Vacation']];
+  return `<nav class="nav-bas">${items.map(([v,i,l])=>`<button class="nav-item ${S.vue===v?'active':''}" onclick="changerVue('${v}')"><span class="nav-icon">${i}</span>${l}</button>`).join('')}</nav>`;
+}
+
+function renderVue(){
+  switch(S.vue){
+    case 'vacation': return renderVacation();
+    case 'admin': return renderAdmin();
+    default: return renderVacation();
+  }
+}
+
+// ── VACATION (agent) ───────────────────────────────────────────
+function renderVacation(){
+  if(!S.agent.equipe){
+    return `<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div>Aucune équipe ne t'a été assignée. Contacte ton responsable.</div></div>`;
+  }
+
+  let html = '';
+
+  // Compte rendu de l'équipe précédente
+  if(S.dernierCREquipePrecedente){
+    const cr = S.dernierCREquipePrecedente;
+    const agentPrec = S.tousAgents.find(a=>a.id===cr.agent_id);
+    html += `<div class="card" onclick="ouvrirCompteRenduPasse('${cr.id}')" style="cursor:pointer">
+      <div class="card-title">📥 Passation — ${ORDRE_EQUIPES[S.agent.equipe]}</div>
+      <div style="font-size:13px;color:var(--texte-doux)">Par ${agentPrec?.prenom||'?'} ${agentPrec?.nom||''} · ${fmtDateTime(cr.date_fin)}</div>
+      <div class="info-banner" style="margin-top:10px;margin-bottom:0">👆 Touche pour voir le compte rendu complet de l'équipe précédente</div>
+    </div>`;
+  } else {
+    html += `<div class="card"><div class="info-banner" style="margin-bottom:0">Aucun compte rendu disponible pour l'équipe précédente (${ORDRE_EQUIPES[S.agent.equipe]}).</div></div>`;
+  }
+
+  if(!S.vacationActive){
+    html += `<div class="card">
+      <div class="card-title">Démarrer ma vacation</div>
+      <div class="info-banner">🎙️ Démarre ta vacation pour commencer à enregistrer tes liaisons, colis, incidents et anomalies tout au long du service.</div>
+      <button class="btn-primary" onclick="demarrerVacation()">▶️ Démarrer ma vacation</button>
+    </div>`;
+    html += renderMesAnciennesVacations();
+    return html;
+  }
+
+  const evts = S.evenementsVacation||[];
+  html += `
+  <div class="card">
+    <div class="card-title">Vacation en cours · ${equipeBadge(S.agent.equipe)}</div>
+    <div class="info-banner">🎙️ Appuie sur un bouton, dicte ou tape ta phrase, valide. Recommence autant de fois que nécessaire.</div>
+    <div class="type-btns" style="margin-bottom:8px">
+      <button class="type-btn" onclick="ouvrirSaisieEvenement('liaison')">🚛<br>Liaison</button>
+      <button class="type-btn" onclick="ouvrirSaisieEvenement('colis')">📦<br>Colis</button>
+    </div>
+    <div class="type-btns">
+      <button class="type-btn" onclick="ouvrirSaisieEvenement('incident')">⚠️<br>Incident</button>
+      <button class="type-btn" onclick="ouvrirSaisieEvenement('anomalie')">🔧<br>Anomalie</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Éléments enregistrés (${evts.length})</div>
+    ${!evts.length?`<div class="empty-state"><div class="empty-icon">📭</div>Rien pour l'instant.</div>`:
+      evts.map(e=>{
+        const t=TYPES_EVT[e.type];
+        return `<div class="demande-item">
+          <div class="demande-header">
+            <div>
+              <div class="demande-type" style="color:${t.couleur}">${t.icon} ${t.label} · ${fmtHeure(e.created_at)}</div>
+              <div class="demande-dates" style="margin-top:4px">${e.texte}</div>
+            </div>
+          </div>
+          ${e.photo_url?`<img src="${e.photo_url}" class="evt-photo" />`:''}
+        </div>`;
+      }).join('')
+    }
+  </div>
+
+  <div class="card">
+    <button class="btn-primary" style="background:var(--vert)" onclick="terminerVacation()">✅ Terminer la vacation</button>
+  </div>`;
+  html += renderMesAnciennesVacations();
+  return html;
+}
+
+function renderMesAnciennesVacations(){
+  const mesVac = (S.toutesVacations||[]).filter(v=>v.agent_id===S.agent.id && v.statut==='terminee');
+  if(!mesVac.length) return '';
+  return `<div class="card">
+    <div class="card-title">Mes vacations passées</div>
+    ${mesVac.slice(0,5).map(v=>`
+      <div class="demande-item" onclick="ouvrirCompteRendu('${v.id}')" style="cursor:pointer">
+        <div class="demande-header">
+          <div><div class="demande-type" style="font-size:13px">${fmtDateTime(v.date_debut)} → ${fmtDateTime(v.date_fin)}</div></div>
+          <span class="badge terminee">✅ Voir</span>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+// ── SAISIE ÉVÉNEMENT ────────────────────────────────────────────
+function ouvrirSaisieEvenement(type){ S.modal='evenement-'+type; S.evtTexte=''; S.evtPhoto=null; render(); }
+
+let recognition=null;
+function demarrerEcoute(targetId){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ toast('Reconnaissance vocale non disponible','err'); return; }
+  recognition = new SR();
+  recognition.lang='fr-FR'; recognition.continuous=false; recognition.interimResults=false;
+  recognition.onresult=(ev)=>{
+    const transcript=ev.results[0][0].transcript;
+    const el=document.getElementById(targetId);
+    if(el){ el.value=(el.value?el.value+' ':'')+transcript; S.evtTexte=el.value; }
+  };
+  recognition.onerror=()=>toast('Erreur micro, réessaie','err');
+  recognition.start();
+  toast('🎙️ Parle maintenant...','ok');
+}
+
+function gererPhotoEvt(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=(e)=>{ S.evtPhoto=e.target.result; render(); };
+  reader.readAsDataURL(file);
+}
+
+async function validerEvenement(type){
+  const texte=document.getElementById('evt-texte-input')?.value.trim();
+  if(!texte) return toast('Saisis ou dicte un texte','err');
+  try{
+    await db.post('evenements_vacation',{vacation_id:S.vacationActive.id, type, texte, photo_url:S.evtPhoto||null});
+    toast('✅ Ajouté !','ok');
+    fermerModal();
+    await chargerVacationEnCours();
+    render();
+  }catch(e){ toast('Erreur ajout','err'); }
+}
+
+function renderModalEvenement(type){
+  const t=TYPES_EVT[type];
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title" style="color:${t.couleur}">${t.icon} ${t.label}</div>
+      <div class="form-group">
+        <label class="form-label">Dicte ou tape ta phrase</label>
+        <textarea class="form-input" id="evt-texte-input" rows="4" placeholder="Ex : Liaison Strasbourg, arrivée 14h05...">${S.evtTexte||''}</textarea>
+      </div>
+      <button class="btn-mic" onclick="demarrerEcoute('evt-texte-input')">🎙️ Dicter au micro</button>
+      ${(type==='incident'||type==='anomalie')?`
+      <div class="form-group">
+        <label class="form-label">Photo (optionnel)</label>
+        <input type="file" accept="image/*" capture="environment" onchange="gererPhotoEvt(this)" class="form-input" />
+        ${S.evtPhoto?`<img src="${S.evtPhoto}" class="evt-photo" />`:''}
+      </div>`:''}
+      <div class="modal-btns">
+        <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+        <button class="btn-primary" style="flex:1;background:${t.couleur}" onclick="validerEvenement('${type}')">Ajouter</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── VACATION : DÉMARRER / TERMINER ─────────────────────────────
+async function demarrerVacation(){
+  try{
+    const res=await db.post('vacations',{agent_id:S.agent.id, equipe:S.agent.equipe, statut:'en_cours'});
+    S.vacationActive=res[0]; S.evenementsVacation=[];
+    toast('🎙️ Vacation démarrée !','ok'); render();
+  }catch(e){ toast('Erreur démarrage','err'); }
+}
+async function terminerVacation(){
+  if(!confirm('Terminer la vacation et générer le compte rendu ?')) return;
+  try{
+    await db.patch('vacations',`id=eq.${S.vacationActive.id}`,{statut:'terminee', date_fin:new Date().toISOString()});
+    toast('✅ Vacation terminée !','ok');
+    S.vacationActive=null;
+    await chargerTout();
+    render();
+  }catch(e){ toast('Erreur','err'); }
+}
+
+// ── CHARGEMENT DONNÉES ──────────────────────────────────────────
+async function chargerVacationEnCours(){
+  try{
+    const res=await db.get('vacations',`agent_id=eq.${S.agent.id}&statut=eq.en_cours&order=created_at.desc&limit=1`);
+    S.vacationActive=res[0]||null;
+    S.evenementsVacation = S.vacationActive ? await db.get('evenements_vacation',`vacation_id=eq.${S.vacationActive.id}&order=created_at.asc`) : [];
+  }catch(e){ S.vacationActive=null; S.evenementsVacation=[]; }
+}
+
+async function chargerDernierCREquipePrecedente(){
+  if(!S.agent.equipe){ S.dernierCREquipePrecedente=null; return; }
+  const eqPrec = ORDRE_EQUIPES[S.agent.equipe];
+  try{
+    const res=await db.get('vacations',`equipe=eq.${eqPrec}&statut=eq.terminee&order=date_fin.desc&limit=1`);
+    S.dernierCREquipePrecedente=res[0]||null;
+  }catch(e){ S.dernierCREquipePrecedente=null; }
+}
+
+async function chargerToutesVacations(){
+  try{ S.toutesVacations=await db.get('vacations','order=created_at.desc&limit=100'); }
+  catch(e){ S.toutesVacations=[]; }
+}
+async function chargerAgents(){
+  try{ S.tousAgents=await db.get('agents','order=nom.asc'); }
+  catch(e){ S.tousAgents=[]; }
+}
+
+async function chargerTout(){
+  await chargerAgents();
+  await chargerVacationEnCours();
+  await chargerDernierCREquipePrecedente();
+  await chargerToutesVacations();
+  const fresh=S.tousAgents.find(a=>a.id===S.agent.id);
+  if(fresh) S.agent=fresh;
+}
+
+// ── COMPTE RENDU (vue détaillée) ───────────────────────────────
+async function ouvrirCompteRendu(vacationId){
+  try{
+    const evts=await db.get('evenements_vacation',`vacation_id=eq.${vacationId}&order=created_at.asc`);
+    const v=(S.toutesVacations||[]).find(x=>x.id===vacationId);
+    S.compteRenduActuel={vacation:v, evenements:evts};
+    S.vueCR='categorie';
+    S.modal='compte-rendu';
+    render();
+  }catch(e){ toast('Erreur chargement','err'); }
+}
+async function ouvrirCompteRenduPasse(vacationId){ await ouvrirCompteRendu(vacationId); }
+
+function setVueCR(v){ S.vueCR=v; render(); }
+
+function renderModalCompteRendu(){
+  const cr=S.compteRenduActuel; if(!cr) return '';
+  const agent=S.tousAgents.find(a=>a.id===cr.vacation.agent_id);
+  const parCategorie={liaison:[],colis:[],incident:[],anomalie:[]};
+  cr.evenements.forEach(e=>{ if(parCategorie[e.type]) parCategorie[e.type].push(e); });
+
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">📋 Compte rendu — ${agent?.prenom||'?'} ${agent?.nom||''}</div>
+      ${equipeBadge(cr.vacation.equipe)}
+      <div style="font-size:12px;color:var(--texte-doux);margin-bottom:14px">${fmtDateTime(cr.vacation.date_debut)} → ${fmtDateTime(cr.vacation.date_fin)}</div>
+
+      <div class="view-toggle">
+        <button class="${S.vueCR==='categorie'?'active':''}" onclick="setVueCR('categorie')">📂 Par catégorie</button>
+        <button class="${S.vueCR==='chrono'?'active':''}" onclick="setVueCR('chrono')">🕐 Chronologique</button>
+      </div>
+
+      ${S.vueCR==='categorie'?`
+        ${!cr.evenements.length?`<div class="empty-state"><div class="empty-icon">📭</div>Aucun élément enregistré.</div>`:
+        Object.entries(parCategorie).map(([type,liste])=>{
+          if(!liste.length) return '';
+          const t=TYPES_EVT[type];
+          return `<div class="cat-section">
+            <div class="cat-header" style="color:${t.couleur}">${t.icon} ${t.label} (${liste.length})</div>
+            ${liste.map(e=>`<div class="cat-item">${e.texte}${e.photo_url?' 📷':''}${e.photo_url?`<img src="${e.photo_url}" class="evt-photo" />`:''}</div>`).join('')}
+          </div>`;
+        }).join('')}
+      `:`
+        ${!cr.evenements.length?`<div class="empty-state"><div class="empty-icon">📭</div>Aucun élément enregistré.</div>`:
+        cr.evenements.map(e=>{
+          const t=TYPES_EVT[e.type];
+          return `<div class="timeline-item">
+            <div class="timeline-time">${fmtHeure(e.created_at)}</div>
+            <div class="timeline-content"><strong style="color:${t.couleur}">${t.icon} ${t.label}</strong><br>${e.texte}${e.photo_url?`<img src="${e.photo_url}" class="evt-photo" />`:''}</div>
+          </div>`;
+        }).join('')}
+      `}
+      <div class="modal-btns"><button class="btn-annuler" style="width:100%" onclick="fermerModal()">Fermer</button></div>
+    </div>
+  </div>`;
+}
+
+// ── ADMIN ───────────────────────────────────────────────────────
+function renderAdmin(){
+  if(!S.agent.est_responsable) return `<div class="card"><p>Accès non autorisé.</p></div>`;
+  return `
+  <div class="admin-tabs">
+    <button class="admin-tab ${S.adminTab==='vacations'?'active':''}" onclick="setAdminTab('vacations')">🎙️ Vacations</button>
+    <button class="admin-tab ${S.adminTab==='agents'?'active':''}" onclick="setAdminTab('agents')">👥 Agents</button>
+    <button class="admin-tab ${S.adminTab==='ajouter'?'active':''}" onclick="setAdminTab('ajouter')">➕ Ajouter</button>
+  </div>
+  ${S.adminTab==='vacations'?renderAdminVacations():''}
+  ${S.adminTab==='agents'?renderAdminAgents():''}
+  ${S.adminTab==='ajouter'?renderAdminAjouter():''}`;
+}
+
+function renderAdminVacations(){
+  const vacations=S.toutesVacations||[];
+  const filtrees=S.filtreEquipe==='Toutes'?vacations:vacations.filter(v=>v.equipe===S.filtreEquipe);
+  return `
+  <div class="filtre-equipes">
+    ${['Toutes',...EQUIPES].map(e=>`<button class="filtre-btn ${S.filtreEquipe===e?'active':''}" onclick="setFiltreEquipe('${e}')">${e}</button>`).join('')}
+  </div>
+  ${!filtrees.length?`<div class="card"><div class="empty-state"><div class="empty-icon">🎙️</div>Aucun compte rendu pour l'instant.</div></div>`:
+    filtrees.map(v=>{
+      const agent=S.tousAgents.find(a=>a.id===v.agent_id);
+      return `<div class="card" onclick="ouvrirCompteRendu('${v.id}')" style="cursor:pointer">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700;font-size:14px">${agent?.prenom||'?'} ${agent?.nom||''}</div>
+            ${equipeBadge(v.equipe)}
+            <div style="font-size:11px;color:var(--texte-doux);margin-top:4px">${fmtDateTime(v.date_debut)}${v.date_fin?' → '+fmtDateTime(v.date_fin):' · en cours'}</div>
+          </div>
+          <span class="badge ${v.statut}">${v.statut==='terminee'?'✅ Terminée':'🎙️ En cours'}</span>
+        </div>
+      </div>`;
+    }).join('')
+  }`;
+}
+
+function renderAdminAgents(){
+  return `<div class="card">
+    <div class="card-title">Agents</div>
+    <div class="filtre-equipes">
+      ${['Toutes',...EQUIPES].map(e=>`<button class="filtre-btn ${S.filtreEquipe===e?'active':''}" onclick="setFiltreEquipe('${e}')">${e}</button>`).join('')}
+    </div>
+    ${S.tousAgents.filter(a=>S.filtreEquipe==='Toutes'||a.equipe===S.filtreEquipe).map(a=>`
+    <div class="agent-item" onclick="ouvrirEditAgent('${a.id}')">
+      <div>
+        <div class="agent-name">${a.prenom} ${a.nom}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+          ${equipeBadge(a.equipe)}<span class="agent-code">Code : ${a.code_acces}</span>
+        </div>
+      </div>
+      <span style="font-size:16px;color:var(--texte-doux)">›</span>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderAdminAjouter(){
+  return `<div class="card">
+    <div class="card-title">Ajouter un agent</div>
+    <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" id="new-prenom" type="text" /></div>
+    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="new-nom" type="text" /></div>
+    <div class="form-group"><label class="form-label">Équipe</label>
+      <select class="form-input" id="new-equipe">
+        <option value="">-- Choisir --</option>
+        ${EQUIPES.map(e=>`<option value="${e}">${e}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Code d'accès</label><input class="form-input" id="new-code" type="text" /></div>
+    <button class="btn-primary" onclick="ajouterAgent()">Ajouter</button>
+  </div>`;
+}
+
+function renderModalEditAgent(){
+  const a=S.tousAgents.find(x=>x.id===S.editAgentId); if(!a) return '';
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">✏️ ${a.prenom} ${a.nom}</div>
+      <div class="form-group"><label class="form-label">Équipe</label>
+        <select class="form-input" id="edit-equipe">
+          <option value="">-- Sans équipe --</option>
+          ${EQUIPES.map(e=>`<option value="${e}" ${a.equipe===e?'selected':''}>${e}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Code d'accès</label><input class="form-input" type="text" id="edit-code" value="${a.code_acces}" /></div>
+      <div class="form-group">
+        <label class="form-label">Accès admin</label>
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--gris-bord);border-radius:10px">
+          <input type="checkbox" id="edit-admin" ${a.est_responsable?'checked':''} style="width:18px;height:18px" />
+          <label for="edit-admin" style="font-size:13px">Cet agent a accès à l'admin</label>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+        <button class="btn-primary" style="flex:1" onclick="sauvegarderAgent('${a.id}')">Enregistrer</button>
+      </div>
+      ${a.id!==S.agent.id?`<div style="margin-top:12px;text-align:center"><button class="lien-danger" onclick="supprimerAgent('${a.id}')">🗑️ Supprimer cet agent</button></div>`:''}
+    </div>
+  </div>`;
+}
+
+async function ajouterAgent(){
+  const prenom=document.getElementById('new-prenom')?.value.trim();
+  const nom=document.getElementById('new-nom')?.value.trim();
+  const equipe=document.getElementById('new-equipe')?.value||null;
+  const code=document.getElementById('new-code')?.value.trim();
+  if(!prenom||!nom||!code) return toast('Remplis tous les champs','err');
+  try{
+    await db.post('agents',{prenom,nom,equipe:equipe||null,code_acces:code,est_responsable:false});
+    toast(`✅ ${prenom} ${nom} ajouté !`,'ok');
+    document.getElementById('new-prenom').value='';document.getElementById('new-nom').value='';document.getElementById('new-code').value='';
+    await chargerAgents(); render();
+  }catch(e){ toast('Erreur ajout','err'); }
+}
+
+function ouvrirEditAgent(id){ S.editAgentId=id; S.modal='edit-agent'; render(); }
+async function sauvegarderAgent(id){
+  const equipe=document.getElementById('edit-equipe')?.value||null;
+  const code=document.getElementById('edit-code')?.value.trim();
+  const admin=document.getElementById('edit-admin')?.checked||false;
+  if(!code) return toast('Code requis','err');
+  try{
+    await db.patch('agents',`id=eq.${id}`,{equipe:equipe||null,code_acces:code,est_responsable:admin});
+    toast('✅ Agent mis à jour !','ok'); fermerModal();
+    await chargerAgents(); render();
+  }catch(e){ toast('Erreur','err'); }
+}
+async function supprimerAgent(id){
+  if(!confirm('Supprimer cet agent ?')) return;
+  try{
+    await db.delete('agents',`id=eq.${id}`);
+    toast('Agent supprimé','ok'); fermerModal();
+    await chargerAgents(); render();
+  }catch(e){ toast('Erreur suppression','err'); }
+}
+
+// ── CODE PERSONNEL ──────────────────────────────────────────────
+function ouvrirChangerCode(){ S.modal='changer-code'; render(); }
+function renderModalChangerCode(){
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">🔑 Changer mon code d'accès</div>
+      <div class="form-group"><label class="form-label">Nouveau code</label><input class="form-input" type="password" id="nouveau-code" /></div>
+      <div class="form-group"><label class="form-label">Confirmer</label><input class="form-input" type="password" id="confirm-code" /></div>
+      <div class="modal-btns">
+        <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+        <button class="btn-primary" style="flex:1" onclick="changerCode()">Enregistrer</button>
+      </div>
+    </div>
+  </div>`;
+}
+async function changerCode(){
+  const n=document.getElementById('nouveau-code')?.value.trim();
+  const c=document.getElementById('confirm-code')?.value.trim();
+  if(!n) return toast('Saisis un nouveau code','err');
+  if(n!==c) return toast('Les codes ne correspondent pas','err');
+  try{
+    await db.patch('agents',`id=eq.${S.agent.id}`,{code_acces:n});
+    S.agent.code_acces=n; toast('✅ Code modifié !','ok'); fermerModal();
+  }catch(e){ toast('Erreur','err'); }
+}
+
+// ── NAV / MISC ──────────────────────────────────────────────────
+function setAdminTab(t){ S.adminTab=t; render(); }
+function setFiltreEquipe(e){ S.filtreEquipe=e; render(); }
+function fermerModal(){ S.modal=null; render(); }
+async function changerVue(v){
+  S.vue=v; S.loading=true; render();
+  await chargerTout();
+  S.loading=false; render();
+}
+
+async function connexion(){
+  const prenom=document.getElementById('login-prenom')?.value.trim();
+  const code=document.getElementById('login-code')?.value.trim();
+  if(!prenom||!code) return;
+  try{
+    const res=await db.get('agents',`prenom=ilike.${encodeURIComponent(prenom)}&code_acces=eq.${encodeURIComponent(code)}&select=*`);
+    if(!res.length){ document.getElementById('login-error').style.display='block'; return; }
+    S.agent=res[0];
+    S.loading=true; render();
+    await chargerTout();
+    S.loading=false; render();
+  }catch(e){ toast('Erreur de connexion','err'); }
+}
+function deconnexion(){
+  S={...S, agent:null, vue:'vacation', vacationActive:null, evenementsVacation:[], modal:null};
+  render();
+}
+
+function renderLogin(){
+  return `<div class="login-screen">
+    <div class="login-logo">🎙️</div>
+    <div class="login-title">Compte rendu de vacation</div>
+    <div class="login-sub">La Poste – Mulhouse</div>
+    <div class="login-card">
+      <div class="form-group"><label class="form-label">Ton prénom</label><input class="form-input" id="login-prenom" type="text" placeholder="Ex : Marie" autocomplete="off" /></div>
+      <div class="form-group"><label class="form-label">Code d'accès</label><input class="form-input" id="login-code" type="password" placeholder="••••" autocomplete="off" /></div>
+      <div id="login-error" style="color:var(--rouge);font-size:13px;margin-bottom:10px;display:none">❌ Prénom ou code incorrect.</div>
+      <button class="btn-primary" onclick="connexion()">Se connecter</button>
+    </div>
+  </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
