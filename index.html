@@ -122,6 +122,12 @@ const TYPES_EVT = {
   anomalie: {icon:'🔧', label:'Anomalie', couleur:'#7c3aed'},
 };
 
+const LIAISONS_PAR_EQUIPE = {
+  'Concentration': ['Concentration 1','Concentration 2','Concentration 3','Erstein 1'],
+  'Soirée': ['Erstein 1','Erstein 2','Erstein 3','Erstein 4','SUPP'],
+  'Nuit': ['Erstein 4','Erstein 5','Erstein 6','Chronopost','SUPP'],
+};
+
 emailjs.init(EMAILJS_KEY);
 
 async function sbFetch(method, path, body){
@@ -148,7 +154,7 @@ let S = {
   agent:null, vue:'vacation', adminTab:'vacations', filtreEquipe:'Toutes',
   vacationActive:null, evenementsVacation:[], dernierCREquipePrecedente:null,
   toutesVacations:[], tousAgents:[], compteRenduActuel:null, vueCR:'categorie',
-  modal:null, evtTexte:'', evtPhotos:[], loading:false, editAgentId:null,
+  modal:null, evtTexte:'', evtPhotos:[], loading:false, editAgentId:null, liaison:{}, liaisonsModal:[],
 };
 
 function dateLocale(d){const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const dd=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${dd}`;}
@@ -175,7 +181,8 @@ function render(){
   const app=document.getElementById('app');
   if(!S.agent){app.innerHTML=renderLogin();return;}
   let modalHtml='';
-  if(S.modal && S.modal.startsWith('evenement-')) modalHtml=renderModalEvenement(S.modal.replace('evenement-',''));
+  if(S.modal==='liaison-structuree') modalHtml=renderModalLiaison();
+  else if(S.modal && S.modal.startsWith('evenement-')) modalHtml=renderModalEvenement(S.modal.replace('evenement-',''));
   else if(S.modal==='compte-rendu') modalHtml=renderModalCompteRendu();
   else if(S.modal==='changer-code') modalHtml=renderModalChangerCode();
   else if(S.modal==='edit-agent') modalHtml=renderModalEditAgent();
@@ -569,6 +576,7 @@ function renderModalCompteRendu(){
       <div class="view-toggle">
         <button class="${S.vueCR==='categorie'?'active':''}" onclick="setVueCR('categorie')">📂 Par catégorie</button>
         <button class="${S.vueCR==='chrono'?'active':''}" onclick="setVueCR('chrono')">🕐 Chronologique</button>
+        <button class="${S.vueCR==='liaisons'?'active':''}" onclick="setVueCR('liaisons');chargerLiaisonsModal()">📊 Liaisons</button>
       </div>
 
       ${S.vueCR==='categorie'?`
@@ -591,6 +599,46 @@ function renderModalCompteRendu(){
           </div>`;
         }).join('')}
       `}
+      ${S.vueCR==='liaisons'?`
+        ${!(S.liaisonsModal&&S.liaisonsModal.length)?'<div class="empty-state"><div class="empty-icon">🚛</div>Aucune liaison structurée enregistrée.</div>':`
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr style="background:#1a56a0;color:white">
+                <th style="padding:8px;text-align:left">Liaison</th>
+                <th style="padding:8px">Arrivée</th>
+                <th style="padding:8px">Début</th>
+                <th style="padding:8px">Fin</th>
+                <th style="padding:8px;color:#93c5fd">Conc.</th>
+                <th style="padding:8px;color:#c4b5fd">Disp.</th>
+                <th style="padding:8px;color:#86efac">Dist.</th>
+                <th style="padding:8px">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(S.liaisonsModal||[]).map((l,i)=>`
+                <tr style="background:${i%2===0?'#f4f6f9':'white'}">
+                  <td style="padding:8px;font-weight:700">${l.nom}</td>
+                  <td style="padding:8px;text-align:center">${l.heure_arrivee||'—'}</td>
+                  <td style="padding:8px;text-align:center">${l.heure_debut_traitement||'—'}</td>
+                  <td style="padding:8px;text-align:center">${l.heure_fin_traitement||'—'}</td>
+                  <td style="padding:8px;text-align:center;color:#1a56a0;font-weight:700">${l.colis_concentration||0}</td>
+                  <td style="padding:8px;text-align:center;color:#7c3aed;font-weight:700">${l.colis_dispersion||0}</td>
+                  <td style="padding:8px;text-align:center;color:#16a34a;font-weight:700">${l.colis_distribution||0}</td>
+                  <td style="padding:8px;text-align:center;font-weight:700">${(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)}</td>
+                </tr>`).join('')}
+              <tr style="background:#1a1f2e;color:white;font-weight:700">
+                <td style="padding:8px">TOTAL</td>
+                <td colspan="3" style="padding:8px"></td>
+                <td style="padding:8px;text-align:center;color:#93c5fd">${(S.liaisonsModal||[]).reduce((s,l)=>s+(l.colis_concentration||0),0)}</td>
+                <td style="padding:8px;text-align:center;color:#c4b5fd">${(S.liaisonsModal||[]).reduce((s,l)=>s+(l.colis_dispersion||0),0)}</td>
+                <td style="padding:8px;text-align:center;color:#86efac">${(S.liaisonsModal||[]).reduce((s,l)=>s+(l.colis_distribution||0),0)}</td>
+                <td style="padding:8px;text-align:center">${(S.liaisonsModal||[]).reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>`}
+      `:''}
       <div class="modal-btns" onclick="event.stopPropagation()">
         <button class="btn-annuler" style="flex:1" onclick="fermerModal()">Fermer</button>
         <button class="btn-primary" style="flex:1" onclick="event.stopPropagation();envoyerCRParEmail()">📧 Email</button>
@@ -598,6 +646,12 @@ function renderModalCompteRendu(){
       </div>
     </div>
   </div>`;
+}
+
+async function chargerLiaisonsModal(){
+  if(!S.compteRenduActuel) return;
+  S.liaisonsModal = await chargerLiaisons(S.compteRenduActuel.vacation.id);
+  render();
 }
 
 async function envoyerCRParEmail(){
@@ -907,6 +961,113 @@ function renderLogin(){
 }
 
 render();
+
+// ── LIAISONS STRUCTURÉES ────────────────────────────────────────
+function renderModalLiaison(){
+  const l = S.liaison||{};
+  const equipe = S.agent?.equipe||'';
+  const listeLiaisons = LIAISONS_PAR_EQUIPE[equipe]||[];
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title" style="color:#1a56a0">🚛 Saisie liaison</div>
+
+      <div class="form-group">
+        <label class="form-label">Nom de la liaison</label>
+        <select class="form-input" id="l-nom" onchange="S.liaison.nom=this.value;if(this.value==='Autre')S.liaison.nomAutre='';render()">
+          <option value="">-- Choisir --</option>
+          ${listeLiaisons.map(n=>`<option value="${n}" ${l.nom===n?'selected':''}>${n}</option>`).join('')}
+          <option value="Autre" ${l.nom==='Autre'?'selected':''}>Autre (saisir manuellement)</option>
+        </select>
+        ${l.nom==='Autre'?`<input class="form-input" type="text" id="l-nom-autre" placeholder="Nom de la liaison..." style="margin-top:8px" value="${l.nomAutre||''}" oninput="S.liaison.nomAutre=this.value" />`:''}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="form-group">
+          <label class="form-label">Arrivée</label>
+          <input class="form-input" type="time" id="l-arrivee" value="${l.arrivee||''}" oninput="S.liaison.arrivee=this.value" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Début trait.</label>
+          <input class="form-input" type="time" id="l-debut" value="${l.debut||''}" oninput="S.liaison.debut=this.value" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fin trait.</label>
+          <input class="form-input" type="time" id="l-fin" value="${l.fin||''}" oninput="S.liaison.fin=this.value" />
+        </div>
+      </div>
+
+      <div class="card-title" style="margin-top:4px">Nombre de colis</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="form-group">
+          <label class="form-label" style="color:#1a56a0">Concentration</label>
+          <input class="form-input" type="number" id="l-conc" min="0" placeholder="0" value="${l.concentration||''}" oninput="S.liaison.concentration=parseInt(this.value)||0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="color:#7c3aed">Dispersion</label>
+          <input class="form-input" type="number" id="l-disp" min="0" placeholder="0" value="${l.dispersion||''}" oninput="S.liaison.dispersion=parseInt(this.value)||0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="color:#16a34a">Distribution</label>
+          <input class="form-input" type="number" id="l-dist" min="0" placeholder="0" value="${l.distribution||''}" oninput="S.liaison.distribution=parseInt(this.value)||0" />
+        </div>
+      </div>
+
+      ${(l.concentration||0)+(l.dispersion||0)+(l.distribution||0)>0?`
+      <div style="background:#f4f6f9;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px">
+        <strong>Total colis : ${(l.concentration||0)+(l.dispersion||0)+(l.distribution||0)}</strong>
+      </div>`:''}
+
+      <div class="modal-btns">
+        <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+        <button class="btn-primary" style="flex:1;background:#1a56a0" onclick="validerLiaison()">✅ Enregistrer</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function validerLiaison(){
+  const l = S.liaison||{};
+  const nom = l.nom==='Autre' ? (l.nomAutre||'').trim() : l.nom;
+  if(!nom) return toast('Choisis ou saisis le nom de la liaison','err');
+  if(!l.arrivee) return toast("Indique l'heure d'arrivée",'err');
+
+  const total = (l.concentration||0)+(l.dispersion||0)+(l.distribution||0);
+  // Résumé texte pour le CR
+  const texte = `${nom} | Arrivée: ${l.arrivee}${l.debut?' | Début: '+l.debut:''}${l.fin?' | Fin: '+l.fin:''} | Colis: ${total} (Conc: ${l.concentration||0} / Disp: ${l.dispersion||0} / Dist: ${l.distribution||0})`;
+
+  try{
+    // Enregistrer dans evenements_vacation pour le CR
+    await db.post('evenements_vacation',{
+      vacation_id: S.vacationActive.id,
+      type: 'liaison',
+      texte,
+      photo_url: null,
+    });
+    // Enregistrer dans liaisons pour l'extraction structurée
+    await db.post('liaisons',{
+      vacation_id: S.vacationActive.id,
+      agent_id: S.agent.id,
+      nom,
+      heure_arrivee: l.arrivee||null,
+      heure_debut_traitement: l.debut||null,
+      heure_fin_traitement: l.fin||null,
+      colis_concentration: l.concentration||0,
+      colis_dispersion: l.dispersion||0,
+      colis_distribution: l.distribution||0,
+    });
+    toast('✅ Liaison enregistrée !','ok');
+    S.liaison={};
+    fermerModal();
+    await chargerVacationEnCours();
+    render();
+  }catch(e){ toast('Erreur: '+e.message,'err'); }
+}
+
+// Charger liaisons pour une vacation
+async function chargerLiaisons(vacationId){
+  try{ return await db.get('liaisons',`vacation_id=eq.${vacationId}&order=created_at.asc`); }
+  catch(e){ return []; }
+}
 
 // ── ADMIN ACCIDENTS ─────────────────────────────────────────────
 async function chargerAccidents(){
