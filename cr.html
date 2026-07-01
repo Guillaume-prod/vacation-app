@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Compte rendu de vacation – La Poste MLH</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; background: #f4f6f9; color: #1a1f2e; max-width: 700px; margin: 0 auto; padding: 20px; }
+.header { background: #1a56a0; color: white; padding: 16px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+.logo { width: 40px; height: 40px; background: #FFD700; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.header-title { font-size: 16px; font-weight: 700; }
+.header-sub { font-size: 12px; opacity: 0.7; }
+.card { background: white; border-radius: 12px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.card-title { font-size: 13px; font-weight: 700; color: #5a6478; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+.equipe-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 10px; }
+.Concentration { background: #e8f0fb; color: #1a56a0; }
+.Soirée { background: #ede9fe; color: #7c3aed; }
+.Nuit { background: #1a1f2e; color: white; }
+.meta { font-size: 13px; color: #5a6478; margin-bottom: 16px; }
+.timeline-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.timeline-time { font-weight: 700; font-size: 12px; color: #1a56a0; min-width: 45px; padding-top: 2px; }
+.timeline-type { font-weight: 700; font-size: 12px; margin-bottom: 2px; }
+.timeline-texte { font-size: 13px; color: #333; }
+.evt-photo { max-width: 100%; border-radius: 8px; margin-top: 8px; display: block; }
+.empty { color: #999; font-style: italic; text-align: center; padding: 20px; }
+.loader { text-align: center; padding: 40px; color: #5a6478; }
+.btn-pdf { display: block; width: 100%; padding: 14px; background: #1a56a0; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; margin-top: 16px; }
+@media print { .btn-pdf { display: none; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">🎙️</div>
+  <div>
+    <div class="header-title">Compte rendu de vacation</div>
+    <div class="header-sub">La Poste – Mulhouse</div>
+  </div>
+</div>
+<div id="content"><div class="loader">⏳ Chargement du compte rendu...</div></div>
+
+<script>
+const SUPABASE_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_dES9U1T02LLNFXtR2RgtLg_b4UWK5cv';
+const TYPES = {
+  liaison: {icon:'🚛', label:'Liaison', color:'#1a56a0'},
+  colis: {icon:'📦', label:'Colis', color:'#d97706'},
+  incident: {icon:'⚠️', label:'Incident', color:'#dc2626'},
+  anomalie: {icon:'🔧', label:'Anomalie', color:'#7c3aed'},
+};
+
+async function sbGet(path){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`}
+  });
+  const t = await res.text(); return t ? JSON.parse(t) : [];
+}
+
+function fmtDateTime(iso){
+  if(!iso) return '—';
+  const d = new Date(iso.endsWith('Z')?iso:iso+'Z');
+  return d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function fmtHeure(iso){
+  const d = new Date(iso.endsWith('Z')?iso:iso+'Z');
+  return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+function parsePhotos(photoUrl){
+  if(!photoUrl) return [];
+  try{ const p=JSON.parse(photoUrl); return Array.isArray(p)?p:[photoUrl]; }
+  catch(e){ return [photoUrl]; }
+}
+
+async function charger(){
+  const params = new URLSearchParams(window.location.search);
+  const vacationId = params.get('id');
+  if(!vacationId){
+    document.getElementById('content').innerHTML = '<div class="card"><div class="empty">❌ Aucun compte rendu spécifié.</div></div>';
+    return;
+  }
+  try{
+    const [vacations, agents, evenements] = await Promise.all([
+      sbGet(`vacations?id=eq.${vacationId}&select=*`),
+      sbGet('agents?select=*'),
+      sbGet(`evenements_vacation?vacation_id=eq.${vacationId}&order=created_at.asc`),
+    ]);
+    const v = vacations[0];
+    if(!v){
+      document.getElementById('content').innerHTML = '<div class="card"><div class="empty">❌ Compte rendu introuvable.</div></div>';
+      return;
+    }
+    const agent = agents.find(a=>a.id===v.agent_id);
+    const equipeClass = v.equipe||'none';
+    const icons = {Concentration:'☀️', Soirée:'🌆', Nuit:'🌙'};
+
+    let html = `<div class="card">
+      <span class="equipe-badge ${equipeClass}">${icons[v.equipe]||'👤'} ${v.equipe||'—'}</span>
+      <div style="font-weight:700;font-size:16px;margin-bottom:4px">${agent?.prenom||'?'} ${agent?.nom||''}</div>
+      <div class="meta">
+        ${fmtDateTime(v.date_debut)} → ${fmtDateTime(v.date_fin)}<br>
+        ${evenements.length} événement(s) enregistré(s)
+      </div>
+    </div>`;
+
+    if(!evenements.length){
+      html += `<div class="card"><div class="empty">📭 Aucun élément enregistré pendant cette vacation.</div></div>`;
+    } else {
+      html += `<div class="card">
+        <div class="card-title">🕐 Chronologique</div>
+        ${evenements.map(e=>{
+          const t = TYPES[e.type]||{icon:'•',label:e.type,color:'#333'};
+          const photos = parsePhotos(e.photo_url);
+          return `<div class="timeline-item">
+            <div class="timeline-time">${fmtHeure(e.created_at)}</div>
+            <div style="flex:1">
+              <div class="timeline-type" style="color:${t.color}">${t.icon} ${t.label}</div>
+              <div class="timeline-texte">${e.texte}</div>
+              ${photos.map(url=>`<img src="${url}" class="evt-photo" />`).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+
+    html += `<button class="btn-pdf" onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>`;
+    document.getElementById('content').innerHTML = html;
+  } catch(e){
+    document.getElementById('content').innerHTML = `<div class="card"><div class="empty">❌ Erreur : ${e.message}</div></div>`;
+  }
+}
+
+charger();
+</script>
+</body>
+</html>
