@@ -831,7 +831,7 @@ async function validerAccident(){
   const corps = document.getElementById('acc-corps')?.value;
   const blessure = document.getElementById('acc-blessure')?.value;
   if(!lieu) return toast('Indique le lieu','err');
-  if(!comment) return toast('Décris comment c'est arrivé','err');
+  if(!comment) return toast("Décris comment c'est arrivé",'err');
   if(!corps) return toast('Indique la partie du corps touchée','err');
   if(!blessure) return toast('Indique le type de blessure','err');
   try{
