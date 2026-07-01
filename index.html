@@ -304,7 +304,14 @@ function renderMesAnciennesVacations(){
 }
 
 // ── SAISIE ÉVÉNEMENT ────────────────────────────────────────────
-function ouvrirSaisieEvenement(type){ S.modal='evenement-'+type; S.evtTexte=''; S.evtPhotos=[]; render(); }
+function ouvrirSaisieEvenement(type){ S.modal='evenement-'+type; S.evtTexte=''; S.evtPhotos=[]; // Check URL params for direct vacation link
+const urlParams = new URLSearchParams(window.location.search);
+const vacationIdParam = urlParams.get('vacation');
+if(vacationIdParam){
+  // Store for after login
+  S.vacationDirectId = vacationIdParam;
+}
+render(); }
 
 let recognition=null;
 function demarrerEcoute(targetId){
@@ -575,13 +582,20 @@ async function envoyerCRParEmail(){
   const parCategorie = {liaison:[],colis:[],incident:[],anomalie:[]};
   cr.evenements.forEach(e=>{ if(parCategorie[e.type]) parCategorie[e.type].push(e); });
   const TYPES = {liaison:'🚛',colis:'📦',incident:'⚠️',anomalie:'🔧'};
-  let contenu = `<h3>${equipeBadge(cr.vacation.equipe)} ${agent?.prenom||''} ${agent?.nom||''}</h3>`;
-  contenu += `<p>${fmtDateTime(cr.vacation.date_debut)} → ${fmtDateTime(cr.vacation.date_fin)}</p><hr>`;
+  const lienCR = `https://guillaume-prod.github.io/vacation-app/?vacation=${cr.vacation.id}`;
+  let contenu = '';
+  contenu += `<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif">`;
+  contenu += `<tr><td style="background:#1a56a0;color:white;padding:12px"><b>👤 ${agent?.prenom||''} ${agent?.nom||''} — ${cr.vacation.equipe||''}</b></td></tr>`;
+  contenu += `<tr><td style="background:#f4f6f9;color:#666;font-size:12px;padding:8px">${fmtDateTime(cr.vacation.date_debut)} → ${fmtDateTime(cr.vacation.date_fin)}</td></tr>`;
   Object.entries(parCategorie).forEach(([type,liste])=>{
     if(!liste.length) return;
-    contenu += `<h4>${TYPES[type]} ${type.charAt(0).toUpperCase()+type.slice(1)} (${liste.length})</h4>`;
-    liste.forEach(e=>{ contenu += `<p>• ${e.texte}</p>`; });
+    const colors={liaison:'#1a56a0',colis:'#d97706',incident:'#dc2626',anomalie:'#7c3aed'};
+    contenu += `<tr><td style="padding:8px;border-top:2px solid ${colors[type]||'#ccc'}"><b style="color:${colors[type]||'#333'}">${TYPES[type]} ${type.charAt(0).toUpperCase()+type.slice(1)} (${liste.length})</b>`;
+    liste.forEach(e=>{ contenu += `<br>• ${e.texte}`; });
+    contenu += `</td></tr>`;
   });
+  contenu += `<tr><td style="padding:12px;text-align:center"><a href="${lienCR}" style="background:#1a56a0;color:white;padding:10px 20px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block">📋 Voir le CR complet &amp; PDF</a></td></tr>`;
+  contenu += `</table>`;
   try{
     await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
       date: fmtDateTime(cr.vacation.date_debut),
@@ -838,7 +852,13 @@ async function connexion(){
     S.agent=res[0];
     S.loading=true; render();
     await chargerTout();
-    S.loading=false; render();
+    S.loading=false;
+    // If direct vacation link, open it
+    if(S.vacationDirectId){
+      await ouvrirCompteRendu(S.vacationDirectId);
+      S.vacationDirectId=null;
+    }
+    render();
   }catch(e){ toast('Erreur de connexion','err'); }
 }
 function deconnexion(){
