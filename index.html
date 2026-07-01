@@ -406,12 +406,8 @@ function renderModalRecapNuit(){
 
 async function envoyerRecapEtFermer(){
   fermerModal();
-  toast('📧 Envoi en cours...','ok');
-  const iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  iframe.src = 'https://guillaume-prod.github.io/vacation-app/recap.html';
-  document.body.appendChild(iframe);
-  setTimeout(()=>{ document.body.removeChild(iframe); toast('✅ Récapitulatif envoyé !','ok'); }, 8000);
+  toast('📧 Ouverture en cours...','ok');
+  window.open('https://guillaume-prod.github.io/vacation-app/recap.html','_blank');
 }
 
 // ── CHARGEMENT DONNÉES ──────────────────────────────────────────
@@ -558,16 +554,8 @@ function renderAdminVacations(){
 
 async function envoyerRecapMaintenant(){
   if(!confirm('Envoyer le récapitulatif par email maintenant ?')) return;
-  toast('📧 Envoi en cours...','ok');
-  // Ouvre la page recap dans un iframe invisible pour déclencher l'envoi
-  const iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  iframe.src = 'https://guillaume-prod.github.io/vacation-app/recap.html';
-  document.body.appendChild(iframe);
-  setTimeout(() => {
-    document.body.removeChild(iframe);
-    toast('✅ Récapitulatif envoyé !','ok');
-  }, 8000);
+  toast('📧 Ouverture en cours...','ok');
+  window.open('https://guillaume-prod.github.io/vacation-app/recap.html','_blank');
 }
 
 function renderAdminAgents(){
@@ -786,6 +774,27 @@ function renderModalAccident(){
   return `<div class="modal-overlay" onclick="fermerModal()">
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-title" style="color:var(--rouge)">🚨 Déclaration d'accident</div>
+
+      <div style="background:#fff0f0;border-radius:12px;padding:14px;margin-bottom:16px;border:2px solid #dc262633">
+        <div style="font-size:12px;font-weight:700;color:var(--rouge);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">📞 Appels d'urgence</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <a href="tel:15" style="display:flex;flex-direction:column;align-items:center;padding:12px 6px;background:white;color:var(--rouge);border:2px solid var(--rouge);border-radius:10px;text-decoration:none;font-weight:700;gap:3px">
+            <span style="font-size:20px">🚑</span>
+            <span style="font-size:18px">15</span>
+            <span style="font-size:10px">SAMU</span>
+          </a>
+          <a href="tel:17" style="display:flex;flex-direction:column;align-items:center;padding:12px 6px;background:#1a56a0;color:white;border-radius:10px;text-decoration:none;font-weight:700;gap:3px">
+            <span style="font-size:20px">👮</span>
+            <span style="font-size:18px">17</span>
+            <span style="font-size:10px">POLICE</span>
+          </a>
+          <a href="tel:18" style="display:flex;flex-direction:column;align-items:center;padding:12px 6px;background:var(--rouge);color:white;border-radius:10px;text-decoration:none;font-weight:700;gap:3px">
+            <span style="font-size:20px">🚒</span>
+            <span style="font-size:18px">18</span>
+            <span style="font-size:10px">POMPIERS</span>
+          </a>
+        </div>
+      </div>
 
       <div class="form-group">
         <label class="form-label">Nom et prénom de la personne accidentée</label>
