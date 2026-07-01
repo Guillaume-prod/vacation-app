@@ -165,6 +165,7 @@ function render(){
   else if(S.modal==='changer-code') modalHtml=renderModalChangerCode();
   else if(S.modal==='edit-agent') modalHtml=renderModalEditAgent();
   else if(S.modal==='accident') modalHtml=renderModalAccident();
+  else if(S.modal==='recap-nuit') modalHtml=renderModalRecapNuit();
   app.innerHTML=`${renderHeader()}<div class="content">${S.loading?'<div class="loader">⏳ Chargement...</div>':renderVue()}</div>${renderNav()}${modalHtml}`;
 }
 
@@ -375,10 +376,42 @@ async function terminerVacation(){
   try{
     await db.patch('vacations',`id=eq.${S.vacationActive.id}`,{statut:'terminee', date_fin:new Date().toISOString()});
     toast('✅ Vacation terminée !','ok');
+    const estNuit = S.agent.equipe === 'Nuit';
     S.vacationActive=null;
     await chargerTout();
     render();
+    // Si équipe Nuit, proposer d'envoyer le récap maintenant
+    if(estNuit){
+      setTimeout(()=>{
+        S.modal='recap-nuit';
+        render();
+      }, 800);
+    }
   }catch(e){ toast('Erreur','err'); }
+}
+
+function renderModalRecapNuit(){
+  return `<div class="modal-overlay">
+    <div class="modal">
+      <div class="modal-title">📧 Envoyer le récapitulatif ?</div>
+      <p style="font-size:14px;color:var(--texte-doux);margin-bottom:20px;line-height:1.5">
+        La vacation de nuit est terminée.<br>
+        Veux-tu envoyer le récapitulatif maintenant, ou laisser l'envoi automatique à 7h30 ?
+      </p>
+      <button class="btn-primary" style="margin-bottom:10px" onclick="envoyerRecapEtFermer()">📧 Envoyer maintenant</button>
+      <button class="btn-annuler" style="width:100%" onclick="fermerModal()">⏰ Laisser l'envoi automatique à 7h30</button>
+    </div>
+  </div>`;
+}
+
+async function envoyerRecapEtFermer(){
+  fermerModal();
+  toast('📧 Envoi en cours...','ok');
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = 'https://guillaume-prod.github.io/vacation-app/recap.html';
+  document.body.appendChild(iframe);
+  setTimeout(()=>{ document.body.removeChild(iframe); toast('✅ Récapitulatif envoyé !','ok'); }, 8000);
 }
 
 // ── CHARGEMENT DONNÉES ──────────────────────────────────────────
@@ -494,6 +527,15 @@ function renderAdminVacations(){
   const vacations=S.toutesVacations||[];
   const filtrees=S.filtreEquipe==='Toutes'?vacations:vacations.filter(v=>v.equipe===S.filtreEquipe);
   return `
+  <div class="card" style="background:var(--bleu);color:white;cursor:pointer" onclick="envoyerRecapMaintenant()">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-weight:700;font-size:15px">📧 Envoyer le récap maintenant</div>
+        <div style="font-size:12px;opacity:0.8;margin-top:3px">Envoie immédiatement le compte rendu par email</div>
+      </div>
+      <span style="font-size:24px">→</span>
+    </div>
+  </div>
   <div class="filtre-equipes">
     ${['Toutes',...EQUIPES].map(e=>`<button class="filtre-btn ${S.filtreEquipe===e?'active':''}" onclick="setFiltreEquipe('${e}')">${e}</button>`).join('')}
   </div>
@@ -512,6 +554,20 @@ function renderAdminVacations(){
       </div>`;
     }).join('')
   }`;
+}
+
+async function envoyerRecapMaintenant(){
+  if(!confirm('Envoyer le récapitulatif par email maintenant ?')) return;
+  toast('📧 Envoi en cours...','ok');
+  // Ouvre la page recap dans un iframe invisible pour déclencher l'envoi
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = 'https://guillaume-prod.github.io/vacation-app/recap.html';
+  document.body.appendChild(iframe);
+  setTimeout(() => {
+    document.body.removeChild(iframe);
+    toast('✅ Récapitulatif envoyé !','ok');
+  }, 8000);
 }
 
 function renderAdminAgents(){
