@@ -35,12 +35,15 @@ function fmtHeure(iso){
 async function envoyerRecap(){
   const status = document.getElementById('status');
   try {
-    // Hier = date de la veille
-    const hier = new Date();
+    // Période : 11h00 de la veille → 7h30 aujourd'hui
+    const maintenant = new Date();
+    const hier = new Date(maintenant);
     hier.setDate(hier.getDate()-1);
-    const dateDebut = hier.toISOString().split('T')[0] + 'T00:00:00';
-    const dateFin = hier.toISOString().split('T')[0] + 'T23:59:59';
-    const dateLabel = hier.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+    // Début : hier à 11h00 UTC+2 = 09h00 UTC
+    const dateDebut = hier.toISOString().split('T')[0] + 'T09:00:00Z';
+    // Fin : maintenant (7h30 aujourd'hui)
+    const dateFin = maintenant.toISOString();
+    const dateLabel = hier.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) + ' 11h00 → ' + maintenant.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) + ' 07h30';
 
     // Charger vacations de la veille
     const vacations = await sbGet(`vacations?created_at=gte.${dateDebut}&created_at=lte.${dateFin}&order=equipe.asc,date_debut.asc`);
