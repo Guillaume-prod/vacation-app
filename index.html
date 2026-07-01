@@ -307,15 +307,31 @@ function renderMesAnciennesVacations(){
 function ouvrirSaisieEvenement(type){ S.modal='evenement-'+type; S.evtTexte=''; S.evtPhotos=[]; // Check URL params for direct vacation link
 const urlParams = new URLSearchParams(window.location.search);
 const vacationIdParam = urlParams.get('vacation');
-if(vacationIdParam){
-  S.vacationDirectId = vacationIdParam;
-}
-// Si déjà connecté (session en cours) et lien direct, ouvrir le CR
+if(vacationIdParam) S.vacationDirectId = vacationIdParam;
+
 async function initApp(){
-  if(S.vacationDirectId && S.agent){
-    await chargerTout();
-    await ouvrirCompteRendu(S.vacationDirectId);
-    S.vacationDirectId = null;
+  // Restaurer la session si elle existe
+  const savedSession = localStorage.getItem('vacation_session');
+  if(savedSession){
+    try{
+      const session = JSON.parse(savedSession);
+      // Vérifier que l'agent existe encore
+      const res = await db.get('agents', `id=eq.${session.id}&code_acces=eq.${encodeURIComponent(session.code)}&select=*`);
+      if(res.length){
+        S.agent = res[0];
+        S.loading = true; render();
+        await chargerTout();
+        S.loading = false;
+        if(S.vacationDirectId){
+          await ouvrirCompteRendu(S.vacationDirectId);
+          S.vacationDirectId = null;
+        }
+        render();
+        return;
+      } else {
+        localStorage.removeItem('vacation_session');
+      }
+    }catch(e){ localStorage.removeItem('vacation_session'); }
   }
   render();
 }
@@ -858,10 +874,11 @@ async function connexion(){
     const res=await db.get('agents',`prenom=ilike.${encodeURIComponent(prenom)}&code_acces=eq.${encodeURIComponent(code)}&select=*`);
     if(!res.length){ document.getElementById('login-error').style.display='block'; return; }
     S.agent=res[0];
+    // Sauvegarder la session
+    localStorage.setItem('vacation_session', JSON.stringify({id:res[0].id, prenom:res[0].prenom, code:code}));
     S.loading=true; render();
     await chargerTout();
     S.loading=false;
-    // If direct vacation link, open it
     if(S.vacationDirectId){
       await ouvrirCompteRendu(S.vacationDirectId);
       S.vacationDirectId=null;
@@ -870,6 +887,7 @@ async function connexion(){
   }catch(e){ toast('Erreur de connexion','err'); }
 }
 function deconnexion(){
+  localStorage.removeItem('vacation_session');
   S={...S, agent:null, vue:'vacation', vacationActive:null, evenementsVacation:[], modal:null};
   render();
 }
