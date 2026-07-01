@@ -164,6 +164,7 @@ function render(){
   else if(S.modal==='compte-rendu') modalHtml=renderModalCompteRendu();
   else if(S.modal==='changer-code') modalHtml=renderModalChangerCode();
   else if(S.modal==='edit-agent') modalHtml=renderModalEditAgent();
+  else if(S.modal==='accident') modalHtml=renderModalAccident();
   app.innerHTML=`${renderHeader()}<div class="content">${S.loading?'<div class="loader">⏳ Chargement...</div>':renderVue()}</div>${renderNav()}${modalHtml}`;
 }
 
@@ -233,6 +234,9 @@ function renderVacation(){
     <div class="type-btns">
       <button class="type-btn" onclick="ouvrirSaisieEvenement('incident')">⚠️<br>Incident</button>
       <button class="type-btn" onclick="ouvrirSaisieEvenement('anomalie')">🔧<br>Anomalie</button>
+    </div>
+    <div style="margin-top:8px">
+      <button class="type-btn" style="width:100%;background:#fff0f0;border-color:#dc262633;color:var(--rouge);font-size:15px;padding:14px" onclick="ouvrirAccident()">🚨 Déclarer un accident</button>
     </div>
   </div>
 
@@ -342,7 +346,12 @@ function renderModalEvenement(type){
       ${(type==='incident'||type==='anomalie')?`
       <div class="form-group">
         <label class="form-label">Photo (optionnel)</label>
-        <input type="file" accept="image/*" capture="environment" onchange="gererPhotoEvt(this)" class="form-input" />
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+        <label style="flex:1;padding:10px;border:1.5px solid var(--gris-bord);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;background:var(--bleu-clair);color:var(--bleu)">
+          📷 Appareil photo<input type="file" accept="image/*" capture="environment" onchange="gererPhotoEvt(this)" style="display:none" /></label>
+        <label style="flex:1;padding:10px;border:1.5px solid var(--gris-bord);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;background:var(--gris);color:var(--texte)">
+          🖼️ Galerie<input type="file" accept="image/*" onchange="gererPhotoEvt(this)" style="display:none" /></label>
+      </div>
         ${S.evtPhoto?`<img src="${S.evtPhoto}" class="evt-photo" />`:''}
       </div>`:''}
       <div class="modal-btns">
@@ -473,10 +482,12 @@ function renderAdmin(){
     <button class="admin-tab ${S.adminTab==='vacations'?'active':''}" onclick="setAdminTab('vacations')">🎙️ Vacations</button>
     <button class="admin-tab ${S.adminTab==='agents'?'active':''}" onclick="setAdminTab('agents')">👥 Agents</button>
     <button class="admin-tab ${S.adminTab==='ajouter'?'active':''}" onclick="setAdminTab('ajouter')">➕ Ajouter</button>
+    <button class="admin-tab ${S.adminTab==='accidents'?'active':''}" onclick="setAdminTab('accidents');chargerAccidents()">🚨 Accidents</button>
   </div>
   ${S.adminTab==='vacations'?renderAdminVacations():''}
   ${S.adminTab==='agents'?renderAdminAgents():''}
-  ${S.adminTab==='ajouter'?renderAdminAjouter():''}`;
+  ${S.adminTab==='ajouter'?renderAdminAjouter():''}
+  ${S.adminTab==='accidents'?renderAdminAccidents():''}`;
 }
 
 function renderAdminVacations(){
@@ -670,6 +681,183 @@ function renderLogin(){
 }
 
 render();
+
+// ── ADMIN ACCIDENTS ─────────────────────────────────────────────
+async function chargerAccidents(){
+  try{ S.tousAccidents=await db.get('accidents','order=created_at.desc&limit=50'); }
+  catch(e){ S.tousAccidents=[]; }
+  render();
+}
+
+function renderAdminAccidents(){
+  const accidents=S.tousAccidents||[];
+  if(!accidents.length) return `<div class="card"><div class="empty-state"><div class="empty-icon">✅</div>Aucun accident déclaré.</div></div>`;
+  return accidents.map(a=>{
+    const agent=S.tousAgents.find(x=>x.id===a.agent_id);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-weight:700;font-size:15px;color:var(--rouge)">🚨 Accident</div>
+          <div style="font-size:13px;font-weight:600">${agent?.prenom||'?'} ${agent?.nom||''}</div>
+          <div style="font-size:11px;color:var(--texte-doux)">${new Date(a.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        ${equipeBadge(agent?.equipe)}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+        ${a.personne?`<div><strong>👤 Personne accidentée :</strong> ${a.personne}</div>`:''}
+        <div><strong>📍 Lieu :</strong> ${a.lieu}${a.lieu_precision?' — '+a.lieu_precision:''}</div>
+        <div><strong>📝 Comment :</strong> ${a.comment}</div>
+        <div><strong>🦵 Partie du corps :</strong> ${a.partie_corps}${a.partie_corps_precision?' — '+a.partie_corps_precision:''}</div>
+        <div><strong>🩹 Blessure :</strong> ${a.type_blessure}</div>
+        <div><strong>🚑 SST :</strong> ${a.pris_en_charge_sst?'✅ Oui':'❌ Non'} &nbsp; <strong>🏥 Hôpital :</strong> ${a.transporte_hopital?'✅ Oui':'❌ Non'}</div>
+        <div><strong>👁️ Témoins :</strong> ${a.temoins?'✅ Oui'+(a.temoins_noms?' — '+a.temoins_noms:''):'❌ Non'}</div>
+        ${a.remarques?`<div><strong>💬 Remarques :</strong> ${a.remarques}</div>`:''}
+      </div>
+      ${a.photo_url?`<img src="${a.photo_url}" class="evt-photo" style="margin-top:10px" />`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── ACCIDENT ────────────────────────────────────────────────────
+const LIEUX_DEPOT = ['Dans camion','Zone déchargement','Bras 1','Bras 2','Bras 3','Bras 4','Bras 5','Bras 6','Bras 7','Bras 8','Bras 9','Zone chargement'];
+const PARTIES_CORPS = ['Tête','Cou','Épaule droite','Épaule gauche','Bras droit','Bras gauche','Coude droit','Coude gauche','Poignet droit','Poignet gauche','Main droite','Main gauche','Dos','Poitrine','Abdomen','Hanche droite','Hanche gauche','Genou droit','Genou gauche','Cheville droite','Cheville gauche','Pied droit','Pied gauche'];
+const TYPES_BLESSURE = ['Plaie ouverte','Choc / Contusion','Entorse / Foulure','Fracture','Brûlure','Coupure','Écrasement','Autre'];
+
+function ouvrirAccident(){ S.modal='accident'; S.accident={}; render(); }
+
+function renderModalAccident(){
+  const a = S.accident||{};
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title" style="color:var(--rouge)">🚨 Déclaration d'accident</div>
+
+      <div class="form-group">
+        <label class="form-label">Nom et prénom de la personne accidentée</label>
+        <input class="form-input" type="text" id="acc-personne" placeholder="Ex : Marie DUPONT" value="${a.personne||''}" oninput="S.accident.personne=this.value" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Témoins</label>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1.5px solid var(--gris-bord);border-radius:10px;margin-bottom:8px">
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="acc-temoins" ${a.temoins?'checked':''} onchange="S.accident.temoins=this.checked;render()" style="width:18px;height:18px" />
+            Il y a eu des témoins
+          </label>
+        </div>
+        ${a.temoins?`<textarea class="form-input" id="acc-temoins-noms" rows="2" placeholder="Nom et prénom des témoins..." oninput="S.accident.temoins_noms=this.value">${a.temoins_noms||''}</textarea>`:''}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Lieu dans le dépôt</label>
+        <select class="form-input" id="acc-lieu" onchange="S.accident.lieu=this.value;render()">
+          <option value="">-- Choisir un lieu --</option>
+          ${LIEUX_DEPOT.map(l=>`<option value="${l}" ${a.lieu===l?'selected':''}>${l}</option>`).join('')}
+          <option value="Autre" ${a.lieu==='Autre'?'selected':''}>Autre (préciser)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Précision sur le lieu</label>
+        <input class="form-input" type="text" id="acc-lieu-precision" placeholder="Ex : côté gauche du quai 3..." value="${a.lieu_precision||''}" oninput="S.accident.lieu_precision=this.value" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Comment c'est arrivé</label>
+        <textarea class="form-input" id="acc-comment" rows="3" placeholder="Décris les circonstances..." oninput="S.accident.comment=this.value">${a.comment||''}</textarea>
+        <button class="btn-mic" style="margin-top:6px" onclick="demarrerEcoute('acc-comment')">🎙️ Dicter</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Partie du corps touchée</label>
+        <select class="form-input" id="acc-corps" onchange="S.accident.partie_corps=this.value">
+          <option value="">-- Choisir --</option>
+          ${PARTIES_CORPS.map(p=>`<option value="${p}" ${a.partie_corps===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Précision partie du corps</label>
+        <input class="form-input" type="text" id="acc-corps-precision" placeholder="Ex : face interne du genou..." value="${a.partie_corps_precision||''}" oninput="S.accident.partie_corps_precision=this.value" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Type de blessure</label>
+        <select class="form-input" id="acc-blessure" onchange="S.accident.type_blessure=this.value">
+          <option value="">-- Choisir --</option>
+          ${TYPES_BLESSURE.map(b=>`<option value="${b}" ${a.type_blessure===b?'selected':''}>${b}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Prise en charge</label>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1.5px solid var(--gris-bord);border-radius:10px">
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="acc-sst" ${a.sst?'checked':''} onchange="S.accident.sst=this.checked" style="width:18px;height:18px" />
+            Pris en charge par un SST
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="acc-hopital" ${a.hopital?'checked':''} onchange="S.accident.hopital=this.checked" style="width:18px;height:18px" />
+            Transporté à l'hôpital
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Photo (optionnel)</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <label style="flex:1;padding:10px;border:1.5px solid var(--gris-bord);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;background:var(--bleu-clair);color:var(--bleu)">
+            📷 Appareil photo<input type="file" accept="image/*" capture="environment" onchange="gererPhotoEvt(this)" style="display:none" /></label>
+          <label style="flex:1;padding:10px;border:1.5px solid var(--gris-bord);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;background:var(--gris);color:var(--texte)">
+            🖼️ Galerie<input type="file" accept="image/*" onchange="gererPhotoEvt(this)" style="display:none" /></label>
+        </div>
+        ${S.evtPhoto?`<img src="${S.evtPhoto}" class="evt-photo" />`:''}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Remarques</label>
+        <textarea class="form-input" id="acc-remarques" rows="3" placeholder="Informations complémentaires..." oninput="S.accident.remarques=this.value">${a.remarques||''}</textarea>
+        <button class="btn-mic" style="margin-top:6px" onclick="demarrerEcoute('acc-remarques')">🎙️ Dicter</button>
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+        <button class="btn-primary" style="flex:1;background:var(--rouge)" onclick="validerAccident()">🚨 Enregistrer</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function validerAccident(){
+  const lieu = document.getElementById('acc-lieu')?.value;
+  const comment = document.getElementById('acc-comment')?.value.trim();
+  const corps = document.getElementById('acc-corps')?.value;
+  const blessure = document.getElementById('acc-blessure')?.value;
+  if(!lieu) return toast('Indique le lieu','err');
+  if(!comment) return toast('Décris comment c'est arrivé','err');
+  if(!corps) return toast('Indique la partie du corps touchée','err');
+  if(!blessure) return toast('Indique le type de blessure','err');
+  try{
+    const personne = document.getElementById('acc-personne')?.value.trim()||null;
+    await db.post('accidents',{
+      vacation_id: S.vacationActive?.id||null,
+      agent_id: S.agent.id,
+      personne,
+      lieu,
+      lieu_precision: document.getElementById('acc-lieu-precision')?.value.trim()||null,
+      comment,
+      partie_corps: corps,
+      partie_corps_precision: document.getElementById('acc-corps-precision')?.value.trim()||null,
+      type_blessure: blessure,
+      temoins: document.getElementById('acc-temoins')?.checked||false,
+      temoins_noms: document.getElementById('acc-temoins-noms')?.value.trim()||null,
+      pris_en_charge_sst: document.getElementById('acc-sst')?.checked||false,
+      transporte_hopital: document.getElementById('acc-hopital')?.checked||false,
+      remarques: document.getElementById('acc-remarques')?.value.trim()||null,
+      photo_url: S.evtPhoto||null,
+    });
+    toast('🚨 Accident déclaré !','ok');
+    S.evtPhoto=null;
+    fermerModal();
+  }catch(e){ toast('Erreur déclaration: '+e.message,'err'); console.error(e); }
+}
 </script>
 </body>
 </html>
