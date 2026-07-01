@@ -510,10 +510,10 @@ function renderModalCompteRendu(){
           </div>`;
         }).join('')}
       `}
-      <div class="modal-btns">
+      <div class="modal-btns" onclick="event.stopPropagation()">
         <button class="btn-annuler" style="flex:1" onclick="fermerModal()">Fermer</button>
-        <button class="btn-primary" style="flex:1" onclick="envoyerCRParEmail()">📧 Email</button>
-        <button class="btn-primary" style="flex:1;background:var(--vert)" onclick="imprimerCR()">📄 PDF</button>
+        <button class="btn-primary" style="flex:1" onclick="event.stopPropagation();envoyerCRParEmail()">📧 Email</button>
+        <button class="btn-primary" style="flex:1;background:var(--vert)" onclick="event.stopPropagation();imprimerCR()">📄 PDF</button>
       </div>
     </div>
   </div>`;
