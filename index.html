@@ -547,10 +547,9 @@ function imprimerCR(){
   const parCategorie = {liaison:[],colis:[],incident:[],anomalie:[]};
   cr.evenements.forEach(e=>{ if(parCategorie[e.type]) parCategorie[e.type].push(e); });
   const TYPES_LABELS = {liaison:'🚛 Liaisons',colis:'📦 Colis',incident:'⚠️ Incidents',anomalie:'🔧 Anomalies'};
-  const win = window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
     <title>CR Vacation – ${agent?.prenom} ${agent?.nom}</title>
-    <style>body{font-family:Arial,sans-serif;padding:20px;max-width:800px;margin:0 auto}h1{color:#1a56a0}h2{color:#1a56a0;border-bottom:2px solid #1a56a0;padding-bottom:4px}p{margin:6px 0}@media print{button{display:none}}</style>
+    <style>body{font-family:Arial,sans-serif;padding:20px;max-width:800px;margin:0 auto}h1{color:#1a56a0}h2{color:#1a56a0;border-bottom:2px solid #1a56a0;padding-bottom:4px}p{margin:6px 0}.btn{margin-top:20px;padding:12px 24px;background:#1a56a0;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer}@media print{.btn{display:none}}</style>
   </head><body>
     <h1>📋 Compte rendu de vacation</h1>
     <p><strong>Agent :</strong> ${agent?.prenom||''} ${agent?.nom||''} — ${cr.vacation.equipe||''}</p>
@@ -561,10 +560,15 @@ function imprimerCR(){
       return `<h2>${TYPES_LABELS[type]} (${liste.length})</h2>${liste.map(e=>`<p>• ${e.texte}</p>`).join('')}`;
     }).join('')}
     ${!cr.evenements.length?'<p><em>Aucun élément enregistré.</em></p>':''}
-    <br><button onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>
-  </body></html>`);
-  win.document.close();
-  setTimeout(()=>win.print(), 500);
+    <br><button class="btn" onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>
+  </body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
 }
 
 // ── ADMIN ───────────────────────────────────────────────────────
