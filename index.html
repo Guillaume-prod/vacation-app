@@ -308,10 +308,18 @@ function ouvrirSaisieEvenement(type){ S.modal='evenement-'+type; S.evtTexte=''; 
 const urlParams = new URLSearchParams(window.location.search);
 const vacationIdParam = urlParams.get('vacation');
 if(vacationIdParam){
-  // Store for after login
   S.vacationDirectId = vacationIdParam;
 }
-render(); }
+// Si déjà connecté (session en cours) et lien direct, ouvrir le CR
+async function initApp(){
+  if(S.vacationDirectId && S.agent){
+    await chargerTout();
+    await ouvrirCompteRendu(S.vacationDirectId);
+    S.vacationDirectId = null;
+  }
+  render();
+}
+initApp(); }
 
 let recognition=null;
 function demarrerEcoute(targetId){
@@ -582,7 +590,7 @@ async function envoyerCRParEmail(){
   const parCategorie = {liaison:[],colis:[],incident:[],anomalie:[]};
   cr.evenements.forEach(e=>{ if(parCategorie[e.type]) parCategorie[e.type].push(e); });
   const TYPES = {liaison:'🚛',colis:'📦',incident:'⚠️',anomalie:'🔧'};
-  const lienCR = `https://guillaume-prod.github.io/vacation-app/?vacation=${cr.vacation.id}`;
+  const lienCR = `https://guillaume-prod.github.io/vacation-app/cr.html?id=${cr.vacation.id}`;
   let contenu = '';
   contenu += `<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif">`;
   contenu += `<tr><td style="background:#1a56a0;color:white;padding:12px"><b>👤 ${agent?.prenom||''} ${agent?.nom||''} — ${cr.vacation.equipe||''}</b></td></tr>`;
