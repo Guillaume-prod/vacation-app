@@ -66,7 +66,7 @@ async function envoyerRecap(){
       } else {
         const agent = agents.find(a=>a.id===v.agent_id);
         const evts = await sbGet(`evenements_vacation?vacation_id=eq.${v.id}&order=created_at.asc`);
-        const lienCR = `https://guillaume-prod.github.io/vacation-app/?vacation=${v.id}`;
+        const lienCR = `https://guillaume-prod.github.io/vacation-app/cr.html?id=${v.id}`;
         contenu += `<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:14px">`;
         contenu += `<tr><td style="background:#e8f0fb;padding:10px;font-weight:bold">${agent?.prenom||'?'} ${agent?.nom||''}</td>`;
         contenu += `<td style="background:#e8f0fb;padding:10px;text-align:right;font-size:12px;color:#666">${fmtHeure(v.date_debut)}${v.date_fin?' → '+fmtHeure(v.date_fin):''}</td></tr>`;
