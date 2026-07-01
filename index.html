@@ -544,22 +544,39 @@ async function envoyerCRParEmail(){
 function imprimerCR(){
   const cr = S.compteRenduActuel; if(!cr) return;
   const agent = S.tousAgents.find(a=>a.id===cr.vacation.agent_id);
-  const parCategorie = {liaison:[],colis:[],incident:[],anomalie:[]};
-  cr.evenements.forEach(e=>{ if(parCategorie[e.type]) parCategorie[e.type].push(e); });
-  const TYPES_LABELS = {liaison:'🚛 Liaisons',colis:'📦 Colis',incident:'⚠️ Incidents',anomalie:'🔧 Anomalies'};
+  const TYPES_LABELS = {liaison:'🚛 Liaison',colis:'📦 Colis',incident:'⚠️ Incident',anomalie:'🔧 Anomalie'};
+  const TYPES_COLORS = {liaison:'#1a56a0',colis:'#d97706',incident:'#dc2626',anomalie:'#7c3aed'};
+  const evtsChrono = [...cr.evenements].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
     <title>CR Vacation – ${agent?.prenom} ${agent?.nom}</title>
-    <style>body{font-family:Arial,sans-serif;padding:20px;max-width:800px;margin:0 auto}h1{color:#1a56a0}h2{color:#1a56a0;border-bottom:2px solid #1a56a0;padding-bottom:4px}p{margin:6px 0}.btn{margin-top:20px;padding:12px 24px;background:#1a56a0;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer}@media print{.btn{display:none}}</style>
+    <style>
+      body{font-family:Arial,sans-serif;padding:20px;max-width:800px;margin:0 auto}
+      h1{color:#1a56a0;border-bottom:3px solid #1a56a0;padding-bottom:8px}
+      .meta{color:#666;font-size:13px;margin-bottom:20px}
+      .evt{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee}
+      .evt-time{font-weight:700;color:#1a56a0;min-width:50px;font-size:13px;padding-top:2px}
+      .evt-type{font-weight:700;font-size:12px;margin-bottom:3px}
+      .evt-texte{font-size:13px;color:#333}
+      .empty{color:#999;font-style:italic}
+      .btn{margin-top:20px;padding:12px 24px;background:#1a56a0;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer}
+      @media print{.btn{display:none}}
+    </style>
   </head><body>
     <h1>📋 Compte rendu de vacation</h1>
-    <p><strong>Agent :</strong> ${agent?.prenom||''} ${agent?.nom||''} — ${cr.vacation.equipe||''}</p>
-    <p><strong>Période :</strong> ${fmtDateTime(cr.vacation.date_debut)} → ${fmtDateTime(cr.vacation.date_fin)}</p>
-    <hr>
-    ${Object.entries(parCategorie).map(([type,liste])=>{
-      if(!liste.length) return '';
-      return `<h2>${TYPES_LABELS[type]} (${liste.length})</h2>${liste.map(e=>`<p>• ${e.texte}</p>`).join('')}`;
-    }).join('')}
-    ${!cr.evenements.length?'<p><em>Aucun élément enregistré.</em></p>':''}
+    <div class="meta">
+      <strong>Agent :</strong> ${agent?.prenom||''} ${agent?.nom||''} — ${cr.vacation.equipe||''}<br>
+      <strong>Période :</strong> ${fmtDateTime(cr.vacation.date_debut)} → ${fmtDateTime(cr.vacation.date_fin)}<br>
+      <strong>Nombre d'événements :</strong> ${evtsChrono.length}
+    </div>
+    ${!evtsChrono.length?'<p class="empty">Aucun élément enregistré.</p>':
+      evtsChrono.map(e=>`
+        <div class="evt">
+          <div class="evt-time">${fmtHeure(e.created_at)}</div>
+          <div>
+            <div class="evt-type" style="color:${TYPES_COLORS[e.type]||'#333'}">${TYPES_LABELS[e.type]||e.type}</div>
+            <div class="evt-texte">${e.texte}</div>
+          </div>
+        </div>`).join('')}
     <br><button class="btn" onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>
   </body></html>`;
   const blob = new Blob([html], {type:'text/html'});
