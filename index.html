@@ -110,6 +110,9 @@ textarea.form-input { resize: none; }
 <script>
 const SUPABASE_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_dES9U1T02LLNFXtR2RgtLg_b4UWK5cv';
+const EMAILJS_SERVICE = 'service_qtkzz3d';
+const EMAILJS_TEMPLATE = 'template_pm7xbso';
+const EMAILJS_KEY = 'eqbebprUUz1zVz_tv';
 const EQUIPES = ['Concentration', 'Soirée', 'Nuit'];
 const ORDRE_EQUIPES = {Concentration:'Nuit', Soirée:'Concentration', Nuit:'Soirée'}; // équipe précédente
 const TYPES_EVT = {
@@ -118,6 +121,8 @@ const TYPES_EVT = {
   incident: {icon:'⚠️', label:'Incident', couleur:'#dc2626'},
   anomalie: {icon:'🔧', label:'Anomalie', couleur:'#7c3aed'},
 };
+
+emailjs.init(EMAILJS_KEY);
 
 async function sbFetch(method, path, body){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -267,11 +272,18 @@ function renderVacation(){
 }
 
 function renderMesAnciennesVacations(){
-  const mesVac = (S.toutesVacations||[]).filter(v=>v.agent_id===S.agent.id && v.statut==='terminee');
+  const maintenant = new Date();
+  const il12hAgo = new Date(maintenant.getTime() - 12*60*60*1000);
+  const mesVac = (S.toutesVacations||[]).filter(v=>{
+    if(v.agent_id!==S.agent.id || v.statut!=='terminee') return false;
+    const dateFin = new Date(v.date_fin.endsWith('Z')?v.date_fin:v.date_fin+'Z');
+    return dateFin >= il12hAgo;
+  });
   if(!mesVac.length) return '';
   return `<div class="card">
-    <div class="card-title">Mes vacations passées</div>
-    ${mesVac.slice(0,5).map(v=>`
+    <div class="card-title">Ma vacation récente</div>
+    <div class="info-banner" style="margin-bottom:10px">📋 Visible pendant 12h après la fin de ta vacation.</div>
+    ${mesVac.map(v=>`
       <div class="demande-item" onclick="ouvrirCompteRendu('${v.id}')" style="cursor:pointer">
         <div class="demande-header">
           <div><div class="demande-type" style="font-size:13px">${fmtDateTime(v.date_debut)} → ${fmtDateTime(v.date_fin)}</div></div>
@@ -498,9 +510,61 @@ function renderModalCompteRendu(){
           </div>`;
         }).join('')}
       `}
-      <div class="modal-btns"><button class="btn-annuler" style="width:100%" onclick="fermerModal()">Fermer</button></div>
+      <div class="modal-btns">
+        <button class="btn-annuler" style="flex:1" onclick="fermerModal()">Fermer</button>
+        <button class="btn-primary" style="flex:1" onclick="envoyerCRParEmail()">📧 Email</button>
+        <button class="btn-primary" style="flex:1;background:var(--vert)" onclick="imprimerCR()">📄 PDF</button>
+      </div>
     </div>
   </div>`;
+}
+
+async function envoyerCRParEmail(){
+  const cr = S.compteRenduActuel; if(!cr) return;
+  const agent = S.tousAgents.find(a=>a.id===cr.vacation.agent_id);
+  const parCategorie = {liaison:[],colis:[],incident:[],anomalie:[]};
+  cr.evenements.forEach(e=>{ if(parCategorie[e.type]) parCategorie[e.type].push(e); });
+  const TYPES = {liaison:'🚛',colis:'📦',incident:'⚠️',anomalie:'🔧'};
+  let contenu = `<h3>${equipeBadge(cr.vacation.equipe)} ${agent?.prenom||''} ${agent?.nom||''}</h3>`;
+  contenu += `<p>${fmtDateTime(cr.vacation.date_debut)} → ${fmtDateTime(cr.vacation.date_fin)}</p><hr>`;
+  Object.entries(parCategorie).forEach(([type,liste])=>{
+    if(!liste.length) return;
+    contenu += `<h4>${TYPES[type]} ${type.charAt(0).toUpperCase()+type.slice(1)} (${liste.length})</h4>`;
+    liste.forEach(e=>{ contenu += `<p>• ${e.texte}</p>`; });
+  });
+  try{
+    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+      date: fmtDateTime(cr.vacation.date_debut),
+      contenu,
+    });
+    toast('✅ CR envoyé par email !','ok');
+  }catch(e){ toast('Erreur envoi email','err'); }
+}
+
+function imprimerCR(){
+  const cr = S.compteRenduActuel; if(!cr) return;
+  const agent = S.tousAgents.find(a=>a.id===cr.vacation.agent_id);
+  const parCategorie = {liaison:[],colis:[],incident:[],anomalie:[]};
+  cr.evenements.forEach(e=>{ if(parCategorie[e.type]) parCategorie[e.type].push(e); });
+  const TYPES_LABELS = {liaison:'🚛 Liaisons',colis:'📦 Colis',incident:'⚠️ Incidents',anomalie:'🔧 Anomalies'};
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>CR Vacation – ${agent?.prenom} ${agent?.nom}</title>
+    <style>body{font-family:Arial,sans-serif;padding:20px;max-width:800px;margin:0 auto}h1{color:#1a56a0}h2{color:#1a56a0;border-bottom:2px solid #1a56a0;padding-bottom:4px}p{margin:6px 0}@media print{button{display:none}}</style>
+  </head><body>
+    <h1>📋 Compte rendu de vacation</h1>
+    <p><strong>Agent :</strong> ${agent?.prenom||''} ${agent?.nom||''} — ${cr.vacation.equipe||''}</p>
+    <p><strong>Période :</strong> ${fmtDateTime(cr.vacation.date_debut)} → ${fmtDateTime(cr.vacation.date_fin)}</p>
+    <hr>
+    ${Object.entries(parCategorie).map(([type,liste])=>{
+      if(!liste.length) return '';
+      return `<h2>${TYPES_LABELS[type]} (${liste.length})</h2>${liste.map(e=>`<p>• ${e.texte}</p>`).join('')}`;
+    }).join('')}
+    ${!cr.evenements.length?'<p><em>Aucun élément enregistré.</em></p>':''}
+    <br><button onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>
+  </body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(), 500);
 }
 
 // ── ADMIN ───────────────────────────────────────────────────────
@@ -919,6 +983,28 @@ async function validerAccident(){
       photo_url: S.evtPhoto||null,
     });
     toast('🚨 Accident déclaré !','ok');
+    // Envoyer email immédiat
+    try{
+      const dateLabel = new Date().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      let contenuAccident = `<div style="padding:12px;background:#fee2e2;border-radius:8px;border-left:4px solid #dc2626">`;
+      contenuAccident += `<h3 style="color:#dc2626">🚨 ACCIDENT DU TRAVAIL</h3>`;
+      const pers = document.getElementById('acc-personne')?.value.trim();
+      if(pers) contenuAccident += `<p><strong>👤 Personne accidentée :</strong> ${pers}</p>`;
+      contenuAccident += `<p><strong>📍 Lieu :</strong> ${lieu}${document.getElementById('acc-lieu-precision')?.value?' — '+document.getElementById('acc-lieu-precision').value:''}</p>`;
+      contenuAccident += `<p><strong>📝 Comment :</strong> ${comment}</p>`;
+      contenuAccident += `<p><strong>🦵 Partie du corps :</strong> ${corps}${document.getElementById('acc-corps-precision')?.value?' — '+document.getElementById('acc-corps-precision').value:''}</p>`;
+      contenuAccident += `<p><strong>🩹 Blessure :</strong> ${blessure}</p>`;
+      contenuAccident += `<p><strong>🚑 SST :</strong> ${document.getElementById('acc-sst')?.checked?'✅ Oui':'❌ Non'} &nbsp; <strong>🏥 Hôpital :</strong> ${document.getElementById('acc-hopital')?.checked?'✅ Oui':'❌ Non'}</p>`;
+      const temoins = document.getElementById('acc-temoins')?.checked;
+      if(temoins) contenuAccident += `<p><strong>👁️ Témoins :</strong> ${document.getElementById('acc-temoins-noms')?.value||'Oui'}</p>`;
+      const remarques = document.getElementById('acc-remarques')?.value.trim();
+      if(remarques) contenuAccident += `<p><strong>💬 Remarques :</strong> ${remarques}</p>`;
+      contenuAccident += `</div>`;
+      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+        date: dateLabel,
+        contenu: contenuAccident,
+      });
+    }catch(err){ console.warn('Email accident non envoyé', err); }
     S.evtPhoto=null;
     fermerModal();
   }catch(e){ toast('Erreur déclaration: '+e.message,'err'); console.error(e); }
