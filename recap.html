@@ -66,21 +66,24 @@ async function envoyerRecap(){
       } else {
         const agent = agents.find(a=>a.id===v.agent_id);
         const evts = await sbGet(`evenements_vacation?vacation_id=eq.${v.id}&order=created_at.asc`);
-        contenu += `<div style="margin-bottom:14px;padding:12px;background:#f4f6f9;border-radius:8px">`;
-        contenu += `<div style="font-weight:700">${agent?.prenom||'?'} ${agent?.nom||''}</div>`;
-        contenu += `<div style="font-size:12px;color:#666">${fmtHeure(v.date_debut)}${v.date_fin?' → '+fmtHeure(v.date_fin):' · en cours'}</div>`;
+        const lienCR = `https://guillaume-prod.github.io/vacation-app/?vacation=${v.id}`;
+        contenu += `<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:14px">`;
+        contenu += `<tr><td style="background:#e8f0fb;padding:10px;font-weight:bold">${agent?.prenom||'?'} ${agent?.nom||''}</td>`;
+        contenu += `<td style="background:#e8f0fb;padding:10px;text-align:right;font-size:12px;color:#666">${fmtHeure(v.date_debut)}${v.date_fin?' → '+fmtHeure(v.date_fin):''}</td></tr>`;
         if(evts.length){
-          contenu += `<ul style="margin:8px 0 0 16px;font-size:13px">`;
-          evts.forEach(e=>{ contenu += `<li>${TYPES[e.type]||'•'} ${e.texte}</li>`; });
-          contenu += `</ul>`;
+          const colors={liaison:'#1a56a0',colis:'#d97706',incident:'#dc2626',anomalie:'#7c3aed'};
+          evts.forEach(e=>{
+            contenu += `<tr><td colspan="2" style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px"><span style="color:${colors[e.type]||'#333'};font-weight:bold">${TYPES[e.type]||'•'}</span> ${e.texte}</td></tr>`;
+          });
         } else {
-          contenu += `<div style="font-size:12px;color:#999;margin-top:6px">Aucun élément enregistré.</div>`;
+          contenu += `<tr><td colspan="2" style="padding:8px 10px;color:#999;font-size:12px;font-style:italic">Aucun élément enregistré.</td></tr>`;
         }
-        contenu += `</div>`;
+        contenu += `<tr><td colspan="2" style="padding:8px 10px;text-align:center"><a href="${lienCR}" style="color:#1a56a0;font-size:12px;font-weight:bold">📋 Voir CR complet &amp; PDF</a></td></tr>`;
+        contenu += `</table>`;
       }
     }
 
-    // Accidents de la veille
+    // Accidents de la période (une seule fois, en dehors de la boucle équipe)
     if(accidents.length){
       contenu += `<h3 style="color:#dc2626;border-bottom:2px solid #dc2626;padding-bottom:4px">🚨 ACCIDENTS (${accidents.length})</h3>`;
       for(const a of accidents){
