@@ -311,7 +311,12 @@ function renderMesAnciennesVacations(){
 }
 
 // ── SAISIE ÉVÉNEMENT ────────────────────────────────────────────
-function ouvrirSaisieEvenement(type){ S.modal='evenement-'+type; S.evtTexte=''; S.evtPhotos=[]; // Check URL params for direct vacation link
+function ouvrirSaisieEvenement(type){
+  if(type==='liaison'){ S.modal='liaison-structuree'; S.liaison={}; render(); return; }
+  S.modal='evenement-'+type; S.evtTexte=''; S.evtPhotos=[]; render();
+}
+
+// Check URL params for direct vacation link
 const urlParams = new URLSearchParams(window.location.search);
 const vacationIdParam = urlParams.get('vacation');
 if(vacationIdParam) S.vacationDirectId = vacationIdParam;
@@ -322,7 +327,6 @@ async function initApp(){
   if(savedSession){
     try{
       const session = JSON.parse(savedSession);
-      // Vérifier que l'agent existe encore
       const res = await db.get('agents', `id=eq.${session.id}&code_acces=eq.${encodeURIComponent(session.code)}&select=*`);
       if(res.length){
         S.agent = res[0];
@@ -342,7 +346,7 @@ async function initApp(){
   }
   render();
 }
-initApp(); }
+initApp();
 
 let recognition=null;
 function demarrerEcoute(targetId){
