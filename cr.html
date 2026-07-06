@@ -271,34 +271,112 @@ function exporterExcel(){
   if(!liaisons.length){ alert('Aucune donnée à exporter'); return; }
 
   const wb = XLSX.utils.book_new();
-
-  // Feuille 1 : Toutes liaisons
-  const dataGlobal = [
-    ['Équipe','Liaison','Heure arrivée','Début traitement','Fin traitement','Concentration','Dispersion','Distribution','Total colis'],
-    ...liaisons.map(l=>[
-      l.equipe, l.nom,
-      l.heure_arrivee||'', l.heure_debut_traitement||'', l.heure_fin_traitement||'',
-      l.colis_concentration||0, l.colis_dispersion||0, l.colis_distribution||0,
-      (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)
-    ]),
-    ['TOTAL GÉNÉRAL','','','','',
-      liaisons.reduce((s,l)=>s+(l.colis_concentration||0),0),
-      liaisons.reduce((s,l)=>s+(l.colis_dispersion||0),0),
-      liaisons.reduce((s,l)=>s+(l.colis_distribution||0),0),
-      liaisons.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
-    ]
-  ];
-  const ws1 = XLSX.utils.aoa_to_sheet(dataGlobal);
-  ws1['!cols'] = [{wch:15},{wch:20},{wch:12},{wch:15},{wch:15},{wch:14},{wch:12},{wch:14},{wch:12}];
-  XLSX.utils.book_append_sheet(wb, ws1, 'Toutes équipes');
-
-  // Feuille 2 : Par équipe
   const equipes = ['Concentration','Soirée','Nuit'];
+
+  // Couleurs par équipe
+  const EQUIPE_COLORS = {
+    'Concentration': {titre:'1a56a0', clair:'dce8f8', fonce:'b3cef0'},
+    'Soirée':        {titre:'d97706', clair:'fef3c7', fonce:'fde68a'},
+    'Nuit':          {titre:'1a56a0', clair:'e0e7ef', fonce:'b8c9dd'},
+  };
+  const HEADER_COLOR = '1a1f2e';
+  const TOTAL_COLOR  = '1a1f2e';
+
+  function cellStyle(bg, bold=false, color='000000'){
+    return { fill:{patternType:'solid',fgColor:{rgb:bg}}, font:{bold, color:{rgb:color}}, alignment:{horizontal:'center',vertical:'center'} };
+  }
+
+  function applyStyles(ws, rows){
+    rows.forEach((row,ri)=>{
+      row.forEach((val,ci)=>{
+        const addr = XLSX.utils.encode_cell({r:ri,c:ci});
+        if(!ws[addr]) ws[addr]={v:val,t:typeof val==='number'?'n':'s'};
+        ws[addr].s = row._style || {};
+      });
+    });
+  }
+
+  // ── Feuille globale (toutes équipes) ──────────────────────────
+  const ws1 = XLSX.utils.book_new && XLSX.utils.aoa_to_sheet([[]]);
+  const wsData = [];
+  const wsMerges = [];
+  let row = 0;
+
+  // Titre global
+  wsData.push([{v:'📊 RÉCAPITULATIF GLOBAL — TOUTES ÉQUIPES', s:cellStyle(HEADER_COLOR,true,'FFFFFF')},...Array(8).fill({v:'',s:cellStyle(HEADER_COLOR,true,'FFFFFF')})]);
+  wsMerges.push({s:{r:row,c:0},e:{r:row,c:8}});
+  row++;
+
+  // En-têtes colonnes
+  const headers = ['Équipe','Liaison','Arrivée','Début trait.','Fin trait.','Concentration','Dispersion','Distribution','Total'];
+  wsData.push(headers.map(h=>({v:h,s:cellStyle('374151',true,'FFFFFF')})));
+  row++;
+
   equipes.forEach(eq=>{
     const lEq = liaisons.filter(l=>l.equipe===eq);
     if(!lEq.length) return;
-    const dataEq = [
-      ['Liaison','Heure arrivée','Début traitement','Fin traitement','Concentration','Dispersion','Distribution','Total'],
+    const c = EQUIPE_COLORS[eq];
+
+    // Titre équipe
+    wsData.push([{v:`${eq.toUpperCase()}`, s:cellStyle(c.titre,true,'FFFFFF')},...Array(8).fill({v:'',s:cellStyle(c.titre,true,'FFFFFF')})]);
+    wsMerges.push({s:{r:row,c:0},e:{r:row,c:8}});
+    row++;
+
+    lEq.forEach((l,i)=>{
+      const bg = i%2===0 ? c.clair : c.fonce;
+      const vals = [eq, l.nom, l.heure_arrivee||'', l.heure_debut_traitement||'', l.heure_fin_traitement||'',
+        l.colis_concentration||0, l.colis_dispersion||0, l.colis_distribution||0,
+        (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)];
+      wsData.push(vals.map(v=>({v,s:cellStyle(bg,false,'000000')})));
+      row++;
+    });
+
+    // Sous-total équipe
+    const st = [
+      `Sous-total ${eq}`,'','','','',
+      lEq.reduce((s,l)=>s+(l.colis_concentration||0),0),
+      lEq.reduce((s,l)=>s+(l.colis_dispersion||0),0),
+      lEq.reduce((s,l)=>s+(l.colis_distribution||0),0),
+      lEq.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
+    ];
+    wsData.push(st.map(v=>({v,s:cellStyle(c.titre,true,'FFFFFF')})));
+    row++;
+
+    // Ligne vide entre équipes
+    wsData.push(Array(9).fill({v:'',s:{}}));
+    row++;
+  });
+
+  // Total général
+  const tg = ['TOTAL GÉNÉRAL','','','','',
+    liaisons.reduce((s,l)=>s+(l.colis_concentration||0),0),
+    liaisons.reduce((s,l)=>s+(l.colis_dispersion||0),0),
+    liaisons.reduce((s,l)=>s+(l.colis_distribution||0),0),
+    liaisons.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
+  ];
+  wsData.push(tg.map(v=>({v,s:cellStyle(TOTAL_COLOR,true,'FFFFFF')})));
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData.map(r=>r.map(c=>c.v||'')));
+  // Apply styles
+  wsData.forEach((row,ri)=>{
+    row.forEach((cell,ci)=>{
+      const addr = XLSX.utils.encode_cell({r:ri,c:ci});
+      if(ws[addr] && cell.s) ws[addr].s = cell.s;
+    });
+  });
+  ws['!merges'] = wsMerges;
+  ws['!cols'] = [{wch:16},{wch:22},{wch:10},{wch:13},{wch:13},{wch:14},{wch:12},{wch:14},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Récap global');
+
+  // ── Feuilles par équipe ───────────────────────────────────────
+  equipes.forEach(eq=>{
+    const lEq = liaisons.filter(l=>l.equipe===eq);
+    if(!lEq.length) return;
+    const c = EQUIPE_COLORS[eq];
+
+    const rows = [
+      [eq.toUpperCase(),...Array(7).fill('')],
+      ['Liaison','Arrivée','Début trait.','Fin trait.','Concentration','Dispersion','Distribution','Total'],
       ...lEq.map(l=>[
         l.nom, l.heure_arrivee||'', l.heure_debut_traitement||'', l.heure_fin_traitement||'',
         l.colis_concentration||0, l.colis_dispersion||0, l.colis_distribution||0,
@@ -311,9 +389,29 @@ function exporterExcel(){
         lEq.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
       ]
     ];
-    const ws = XLSX.utils.aoa_to_sheet(dataEq);
-    ws['!cols'] = [{wch:20},{wch:12},{wch:15},{wch:15},{wch:14},{wch:12},{wch:14},{wch:12}];
-    XLSX.utils.book_append_sheet(wb, ws, eq.substring(0,31));
+    const wsEq = XLSX.utils.aoa_to_sheet(rows);
+
+    // Styles
+    const applyCell = (addr, bg, bold, color='000000')=>{
+      if(!wsEq[addr]) wsEq[addr]={v:'',t:'s'};
+      wsEq[addr].s = cellStyle(bg,bold,color);
+    };
+    // Titre
+    for(let ci=0;ci<8;ci++) applyCell(XLSX.utils.encode_cell({r:0,c:ci}),c.titre,true,'FFFFFF');
+    // Headers
+    for(let ci=0;ci<8;ci++) applyCell(XLSX.utils.encode_cell({r:1,c:ci}),'374151',true,'FFFFFF');
+    // Data rows
+    lEq.forEach((_,i)=>{
+      const bg = i%2===0 ? c.clair : c.fonce;
+      for(let ci=0;ci<8;ci++) applyCell(XLSX.utils.encode_cell({r:2+i,c:ci}),bg,false);
+    });
+    // Total row
+    const totalRow = 2+lEq.length;
+    for(let ci=0;ci<8;ci++) applyCell(XLSX.utils.encode_cell({r:totalRow,c:ci}),TOTAL_COLOR,true,'FFFFFF');
+
+    wsEq['!merges'] = [{s:{r:0,c:0},e:{r:0,c:7}}];
+    wsEq['!cols'] = [{wch:22},{wch:10},{wch:13},{wch:13},{wch:14},{wch:12},{wch:14},{wch:10}];
+    XLSX.utils.book_append_sheet(wb, wsEq, eq.substring(0,31));
   });
 
   const date = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
