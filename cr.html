@@ -83,6 +83,15 @@ function parsePhotos(photoUrl){
   catch(e){ return [photoUrl]; }
 }
 
+function calcDuree(debut, fin){
+  if(!debut||!fin) return '';
+  const [dh,dm] = debut.split(':').map(Number);
+  const [fh,fm] = fin.split(':').map(Number);
+  let totalMin = (fh*60+fm) - (dh*60+dm);
+  if(totalMin < 0) totalMin += 24*60; // passage minuit
+  return Math.round(totalMin/6)/10; // format décimal arrondi à 0.1
+}
+
 async function charger(){
   const params = new URLSearchParams(window.location.search);
   const vacationId = params.get('id');
@@ -148,7 +157,7 @@ async function charger(){
           html += `<div class="section-title">🚛 Liaisons</div>
           <table class="table-liaisons">
             <thead><tr>
-              <th>Liaison</th><th>Arrivée</th><th>Début</th><th>Fin</th>
+              <th>Liaison</th><th>Arrivée</th><th>Début</th><th>Fin</th><th>Durée (h)</th>
               <th style="color:#93c5fd">Conc.</th>
               <th style="color:#c4b5fd">Disp.</th>
               <th style="color:#86efac">Dist.</th>
@@ -221,6 +230,7 @@ async function charger(){
             <th>Arrivée</th>
             <th>Début</th>
             <th>Fin</th>
+            <th>Durée (h)</th>
             <th style="color:#93c5fd">Conc.</th>
             <th style="color:#c4b5fd">Disp.</th>
             <th style="color:#86efac">Dist.</th>
@@ -276,7 +286,7 @@ function exporterExcel(){
 
   // Feuille globale
   const rows = [
-    ['Équipe','Liaison','Arrivée','Début traitement','Fin traitement','Concentration','Dispersion','Distribution','Total colis']
+    ['Équipe','Liaison','Arrivée','Début traitement','Fin traitement','Durée (h)','Concentration','Dispersion','Distribution','Total colis']
   ];
   const boldRows = [0]; // ligne 0 = entêtes en gras
   let rowIdx = 1;
@@ -290,6 +300,7 @@ function exporterExcel(){
       rows.push([
         eq, l.nom,
         l.heure_arrivee||'', l.heure_debut_traitement||'', l.heure_fin_traitement||'',
+        calcDuree(l.heure_debut_traitement,l.heure_fin_traitement)||'',
         l.colis_concentration||0, l.colis_dispersion||0, l.colis_distribution||0,
         (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)
       ]);
@@ -336,9 +347,10 @@ function exporterExcel(){
     const lEq = liaisons.filter(l=>l.equipe===eq);
     if(!lEq.length) return;
     const rowsEq = [
-      ['Liaison','Arrivée','Début traitement','Fin traitement','Concentration','Dispersion','Distribution','Total'],
+      ['Liaison','Arrivée','Début traitement','Fin traitement','Durée (h)','Concentration','Dispersion','Distribution','Total'],
       ...lEq.map(l=>[
         l.nom, l.heure_arrivee||'', l.heure_debut_traitement||'', l.heure_fin_traitement||'',
+        calcDuree(l.heure_debut_traitement,l.heure_fin_traitement)||'',
         l.colis_concentration||0, l.colis_dispersion||0, l.colis_distribution||0,
         (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)
       ]),
