@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Compte rendu – La Poste MLH</title>
 
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Arial, sans-serif; background: #f4f6f9; color: #1a1f2e; max-width: 800px; margin: 0 auto; padding: 20px; }
@@ -271,114 +272,99 @@ function exporterExcel(){
   if(!liaisons.length){ alert('Aucune donnée à exporter'); return; }
 
   const equipes = ['Concentration','Soirée','Nuit'];
-  const COLORS = {
-    Concentration: {titre:'#1a56a0', clair:'#dce8f8', fonce:'#b3cef0', texte:'#ffffff'},
-    Soirée:        {titre:'#d97706', clair:'#fef3c7', fonce:'#fde68a', texte:'#ffffff'},
-    Nuit:          {titre:'#374151', clair:'#e0e7ef', fonce:'#b8c9dd', texte:'#ffffff'},
-  };
+  const wb = XLSX.utils.book_new();
 
-  let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-  <head><meta charset="UTF-8">
-  <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>
-    <x:ExcelWorksheet><x:Name>Récap global</x:Name><x:WorksheetOptions><x:Selected/></x:WorksheetOptions></x:ExcelWorksheet>
-    ${equipes.map(eq=>`<x:ExcelWorksheet><x:Name>${eq}</x:Name><x:WorksheetOptions></x:WorksheetOptions></x:ExcelWorksheet>`).join('')}
-  </x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-  <style>
-    td,th{border:1px solid #ccc;padding:6px 10px;font-family:Arial,sans-serif;font-size:11px;}
-    .titre-global{background:#1a1f2e;color:#fff;font-weight:bold;font-size:13px;text-align:center;}
-    .header{background:#374151;color:#fff;font-weight:bold;text-align:center;}
-    .total{background:#1a1f2e;color:#fff;font-weight:bold;text-align:center;}
-    .vide{background:#ffffff;border:none;}
-    ${equipes.map(eq=>`
-      .titre-${eq.replace('é','e')}{background:${COLORS[eq].titre};color:${COLORS[eq].texte};font-weight:bold;font-size:12px;text-align:center;}
-      .clair-${eq.replace('é','e')}{background:${COLORS[eq].clair};}
-      .fonce-${eq.replace('é','e')}{background:${COLORS[eq].fonce};}
-      .sous-total-${eq.replace('é','e')}{background:${COLORS[eq].titre};color:#fff;font-weight:bold;text-align:center;}
-    `).join('')}
-  </style></head><body>`;
-
-  // Feuille 1 : Récap global
-  html += `<table><tr><td colspan="9" class="titre-global">📊 RÉCAPITULATIF GLOBAL — TOUTES ÉQUIPES</td></tr>`;
-  html += `<tr class="header"><th>Équipe</th><th>Liaison</th><th>Arrivée</th><th>Début trait.</th><th>Fin trait.</th><th>Concentration</th><th>Dispersion</th><th>Distribution</th><th>Total</th></tr>`;
+  // Feuille globale
+  const rows = [
+    ['Équipe','Liaison','Arrivée','Début traitement','Fin traitement','Concentration','Dispersion','Distribution','Total colis']
+  ];
+  const boldRows = [0]; // ligne 0 = entêtes en gras
+  let rowIdx = 1;
 
   equipes.forEach(eq=>{
     const lEq = liaisons.filter(l=>l.equipe===eq);
     if(!lEq.length) return;
-    const cls = eq.replace('é','e');
-    html += `<tr><td colspan="9" class="titre-${cls}">${eq.toUpperCase()}</td></tr>`;
-    lEq.forEach((l,i)=>{
-      const rowCls = i%2===0?`clair-${cls}`:`fonce-${cls}`;
-      const total = (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0);
-      html += `<tr class="${rowCls}">
-        <td>${eq}</td><td>${l.nom}</td>
-        <td style="text-align:center">${l.heure_arrivee||'—'}</td>
-        <td style="text-align:center">${l.heure_debut_traitement||'—'}</td>
-        <td style="text-align:center">${l.heure_fin_traitement||'—'}</td>
-        <td style="text-align:center;color:#1a56a0;font-weight:bold">${l.colis_concentration||0}</td>
-        <td style="text-align:center;color:#7c3aed;font-weight:bold">${l.colis_dispersion||0}</td>
-        <td style="text-align:center;color:#16a34a;font-weight:bold">${l.colis_distribution||0}</td>
-        <td style="text-align:center;font-weight:bold">${total}</td>
-      </tr>`;
+    rows.push([`--- ${eq.toUpperCase()} ---`,'','','','','','','','']);
+    boldRows.push(rowIdx); rowIdx++;
+    lEq.forEach(l=>{
+      rows.push([
+        eq, l.nom,
+        l.heure_arrivee||'', l.heure_debut_traitement||'', l.heure_fin_traitement||'',
+        l.colis_concentration||0, l.colis_dispersion||0, l.colis_distribution||0,
+        (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)
+      ]);
+      rowIdx++;
     });
-    const st = [
+    rows.push([
+      `Sous-total ${eq}`,'','','','',
       lEq.reduce((s,l)=>s+(l.colis_concentration||0),0),
       lEq.reduce((s,l)=>s+(l.colis_dispersion||0),0),
       lEq.reduce((s,l)=>s+(l.colis_distribution||0),0),
       lEq.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
-    ];
-    html += `<tr class="sous-total-${cls}"><td colspan="5">Sous-total ${eq}</td><td style="text-align:center">${st[0]}</td><td style="text-align:center">${st[1]}</td><td style="text-align:center">${st[2]}</td><td style="text-align:center">${st[3]}</td></tr>`;
-    html += `<tr><td colspan="9" class="vide">&nbsp;</td></tr>`;
+    ]);
+    boldRows.push(rowIdx); rowIdx++;
+    rows.push(['','','','','','','','','']);
+    rowIdx++;
   });
 
-  const tg = [
+  const totalRow = ['TOTAL GÉNÉRAL','','','','',
     liaisons.reduce((s,l)=>s+(l.colis_concentration||0),0),
     liaisons.reduce((s,l)=>s+(l.colis_dispersion||0),0),
     liaisons.reduce((s,l)=>s+(l.colis_distribution||0),0),
     liaisons.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
   ];
-  html += `<tr class="total"><td colspan="5">TOTAL GÉNÉRAL</td><td style="text-align:center">${tg[0]}</td><td style="text-align:center">${tg[1]}</td><td style="text-align:center">${tg[2]}</td><td style="text-align:center">${tg[3]}</td></tr>`;
-  html += `</table>`;
+  rows.push(totalRow);
+  boldRows.push(rowIdx);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:16},{wch:22},{wch:10},{wch:14},{wch:14},{wch:14},{wch:12},{wch:14},{wch:12}];
+
+  // Appliquer le gras
+  boldRows.forEach(ri=>{
+    for(let ci=0;ci<9;ci++){
+      const addr = XLSX.utils.encode_cell({r:ri,c:ci});
+      if(!ws[addr]) ws[addr]={v:'',t:'s'};
+      if(!ws[addr].s) ws[addr].s={};
+      ws[addr].s.font = {bold:true};
+    }
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Récap global');
 
   // Feuilles par équipe
   equipes.forEach(eq=>{
     const lEq = liaisons.filter(l=>l.equipe===eq);
     if(!lEq.length) return;
-    const cls = eq.replace('é','e');
-    html += `<br><table><tr><td colspan="8" class="titre-${cls}">${eq.toUpperCase()}</td></tr>`;
-    html += `<tr class="header"><th>Liaison</th><th>Arrivée</th><th>Début trait.</th><th>Fin trait.</th><th>Concentration</th><th>Dispersion</th><th>Distribution</th><th>Total</th></tr>`;
-    lEq.forEach((l,i)=>{
-      const rowCls = i%2===0?`clair-${cls}`:`fonce-${cls}`;
-      const total = (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0);
-      html += `<tr class="${rowCls}">
-        <td>${l.nom}</td>
-        <td style="text-align:center">${l.heure_arrivee||'—'}</td>
-        <td style="text-align:center">${l.heure_debut_traitement||'—'}</td>
-        <td style="text-align:center">${l.heure_fin_traitement||'—'}</td>
-        <td style="text-align:center;color:#1a56a0;font-weight:bold">${l.colis_concentration||0}</td>
-        <td style="text-align:center;color:#7c3aed;font-weight:bold">${l.colis_dispersion||0}</td>
-        <td style="text-align:center;color:#16a34a;font-weight:bold">${l.colis_distribution||0}</td>
-        <td style="text-align:center;font-weight:bold">${total}</td>
-      </tr>`;
-    });
-    const st = [
-      lEq.reduce((s,l)=>s+(l.colis_concentration||0),0),
-      lEq.reduce((s,l)=>s+(l.colis_dispersion||0),0),
-      lEq.reduce((s,l)=>s+(l.colis_distribution||0),0),
-      lEq.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
+    const rowsEq = [
+      ['Liaison','Arrivée','Début traitement','Fin traitement','Concentration','Dispersion','Distribution','Total'],
+      ...lEq.map(l=>[
+        l.nom, l.heure_arrivee||'', l.heure_debut_traitement||'', l.heure_fin_traitement||'',
+        l.colis_concentration||0, l.colis_dispersion||0, l.colis_distribution||0,
+        (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)
+      ]),
+      ['TOTAL','','','',
+        lEq.reduce((s,l)=>s+(l.colis_concentration||0),0),
+        lEq.reduce((s,l)=>s+(l.colis_dispersion||0),0),
+        lEq.reduce((s,l)=>s+(l.colis_distribution||0),0),
+        lEq.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
+      ]
     ];
-    html += `<tr class="sous-total-${cls}"><td>TOTAL</td><td></td><td></td><td></td><td style="text-align:center">${st[0]}</td><td style="text-align:center">${st[1]}</td><td style="text-align:center">${st[2]}</td><td style="text-align:center">${st[3]}</td></tr>`;
-    html += `</table>`;
+    const wsEq = XLSX.utils.aoa_to_sheet(rowsEq);
+    wsEq['!cols'] = [{wch:22},{wch:10},{wch:14},{wch:14},{wch:14},{wch:12},{wch:14},{wch:12}];
+    // Gras sur entête et total
+    [0, rowsEq.length-1].forEach(ri=>{
+      for(let ci=0;ci<8;ci++){
+        const addr = XLSX.utils.encode_cell({r:ri,c:ci});
+        if(!wsEq[addr]) wsEq[addr]={v:'',t:'s'};
+        if(!wsEq[addr].s) wsEq[addr].s={};
+        wsEq[addr].s.font = {bold:true};
+      }
+    });
+    XLSX.utils.book_append_sheet(wb, wsEq, eq.substring(0,31));
   });
 
-  html += `</body></html>`;
-
   const date = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
-  const blob = new Blob([html], {type:'application/vnd.ms-excel;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `liaisons-${date}.xls`;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(url), 3000);
+  XLSX.writeFile(wb, `liaisons-${date}.xlsx`);
 }
 </script>
 </body>
