@@ -202,7 +202,7 @@ function renderHeader(){
 function renderNav(){
   const items=S.agent.est_responsable
     ?[['vacation','🎙️','Vacation'],['pointage','📋','Pointage'],['admin','⚙️','Admin']]
-    :[['vacation','🎙️','Vacation']];
+    :[['vacation','🎙️','Vacation'],['pointage','📋','Pointage']];
   return `<nav class="nav-bas">${items.map(([v,i,l])=>`<button class="nav-item ${S.vue===v?'active':''}" onclick="changerVue('${v}')"><span class="nav-icon">${i}</span>${l}</button>`).join('')}</nav>`;
 }
 
@@ -970,26 +970,76 @@ function renderLogin(){
 render();
 
 // ── POINTAGE ────────────────────────────────────────────────────
+function renderPointageAdmin(){
+  // Vue admin : tous les pointages en cours toutes équipes
+  const equipes = ['Concentration','Soirée','Nuit'];
+  const icons = {Concentration:'☀️', Soirée:'🌆', Nuit:'🌙'};
+  return `<div class="card">
+    <div class="card-title">📋 Pointage — Vue globale</div>
+    <div class="info-banner">👁️ Vue globale de tous les pointages en cours. Démarre une vacation pour pointer ton équipe.</div>
+    ${equipes.map(eq=>{
+      // Trouver vacation en cours pour cette équipe
+      const vacEq = (S.toutesVacations||[]).find(v=>v.equipe===eq&&v.statut==='en_cours');
+      if(!vacEq) return `<div style="padding:10px 0;border-bottom:1px solid var(--gris)">
+        <div style="font-weight:700">${icons[eq]} ${eq}</div>
+        <div style="font-size:12px;color:var(--texte-doux)">Aucune vacation en cours</div>
+      </div>`;
+      const pts = (S.tousPointages||[]).filter(p=>p.vacation_id===vacEq.id);
+      const presents = pts.filter(p=>p.statut==='present');
+      const absents = pts.filter(p=>p.statut!=='present');
+      return `<div style="padding:10px 0;border-bottom:1px solid var(--gris)">
+        <div style="font-weight:700;margin-bottom:6px">${icons[eq]} ${eq}</div>
+        ${!pts.length?'<div style="font-size:12px;color:var(--texte-doux)">Pointage non encore commencé</div>':''}
+        ${presents.map(p=>{
+          const a = S.tousAgents.find(x=>x.id===p.agent_id);
+          return `<div style="font-size:13px;display:flex;justify-content:space-between;padding:3px 0">
+            <span>✅ ${a?.prenom||'?'} ${a?.nom||''}</span>
+            <span style="color:var(--texte-doux);font-size:11px">${p.heure_debut||''}${p.heure_fin?' → '+p.heure_fin:''}</span>
+          </div>`;
+        }).join('')}
+        ${absents.map(p=>{
+          const a = S.tousAgents.find(x=>x.id===p.agent_id);
+          return `<div style="font-size:13px;display:flex;justify-content:space-between;padding:3px 0">
+            <span>${p.statut==='cp'?'🏖️':'⚠️'} ${a?.prenom||'?'} ${a?.nom||''}</span>
+            <span style="font-size:11px;color:var(--texte-doux)">${p.statut==='cp'?'CP':'Absent'}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
 async function chargerPointage(){
-  if(!S.agent.equipe) return;
   try{
-    // Charger agents de la même équipe
-    S.pointageEquipe = await db.get('agents', `equipe=eq.${encodeURIComponent(S.agent.equipe)}&est_responsable=eq.false&order=nom.asc`);
-    // Chercher pointage en cours pour la vacation active
-    if(S.vacationActive){
-      const pts = await db.get('pointages', `vacation_id=eq.${S.vacationActive.id}&order=created_at.asc`);
-      S.pointageActif = pts.length ? pts : null;
+    if(S.agent.equipe){
+      // Charger agents de la même équipe (hors responsables)
+      S.pointageEquipe = await db.get('agents', `equipe=eq.${encodeURIComponent(S.agent.equipe)}&order=nom.asc`);
+      // Chercher pointage en cours pour la vacation active
+      if(S.vacationActive){
+        const pts = await db.get('pointages', `vacation_id=eq.${S.vacationActive.id}&order=created_at.asc`);
+        S.pointageActif = pts.length ? pts : null;
+      }
+    }
+    // Pour admin : charger tous les pointages des vacations en cours
+    if(S.agent.est_responsable){
+      const vacsEnCours = (S.toutesVacations||[]).filter(v=>v.statut==='en_cours');
+      S.tousPointages = [];
+      for(const v of vacsEnCours){
+        const pts = await db.get('pointages',`vacation_id=eq.${v.id}&order=created_at.asc`);
+        S.tousPointages = [...S.tousPointages, ...pts];
+      }
     }
   }catch(e){ console.error(e); }
 }
 
 function renderPointage(){
-  if(!S.agent.est_responsable) return `<div class="card"><div class="empty-state">Accès non autorisé.</div></div>`;
-  if(!S.agent.equipe) return `<div class="card"><div class="empty-state">Aucune équipe assignée.</div></div>`;
-  if(!S.vacationActive) return `<div class="card">
+  if(!S.agent.equipe && !S.agent.est_responsable) return `<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div>Aucune équipe assignée. Contacte ton responsable.</div></div>`;
+  if(!S.vacationActive && !S.agent.est_responsable) return `<div class="card">
     <div class="card-title">📋 Pointage</div>
     <div class="info-banner">⚠️ Démarre d'abord une vacation dans l'onglet 🎙️ Vacation pour pouvoir faire le pointage.</div>
   </div>`;
+  // Admin sans vacation active : voir tous les pointages du jour
+  if(!S.vacationActive && S.agent.est_responsable) return renderPointageAdmin();
 
   // Si pointage déjà commencé
   if(S.pointageActif && S.pointageActif.length){
