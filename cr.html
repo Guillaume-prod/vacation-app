@@ -85,10 +85,13 @@ function parsePhotos(photoUrl){
 
 function calcDuree(debut, fin){
   if(!debut||!fin) return '';
-  const [dh,dm] = debut.split(':').map(Number);
-  const [fh,fm] = fin.split(':').map(Number);
+  const partsDeb = debut.split(':').map(Number);
+  const partsFin = fin.split(':').map(Number);
+  const dh=partsDeb[0], dm=partsDeb[1];
+  const fh=partsFin[0], fm=partsFin[1];
   let totalMin = (fh*60+fm) - (dh*60+dm);
   if(totalMin < 0) totalMin += 24*60; // passage minuit
+  if(totalMin === 0) return '';
   return Math.round(totalMin/6)/10; // format décimal arrondi à 0.1
 }
 
