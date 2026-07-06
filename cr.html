@@ -5,6 +5,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Compte rendu – La Poste MLH</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Arial, sans-serif; background: #f4f6f9; color: #1a1f2e; max-width: 800px; margin: 0 auto; padding: 20px; }
@@ -199,7 +200,64 @@ async function charger(){
       html += '</div>';
     }
 
-    html += `<button class="btn-pdf" onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>`;
+    // Tableau récapitulatif global toutes équipes
+    const toutesLiaisons = [];
+    for(const equipe of EQUIPES){
+      const vacsEquipe = vacations.filter(v=>v.equipe===equipe);
+      for(const v of vacsEquipe){
+        const lv = await sbGet(`liaisons?vacation_id=eq.${v.id}&order=created_at.asc`);
+        lv.forEach(l=>toutesLiaisons.push({...l, equipe}));
+      }
+    }
+
+    if(toutesLiaisons.length){
+      html += `<div class="card" id="tableau-global">
+        <div class="card-title">📊 Récapitulatif global — Toutes équipes confondues</div>
+        <table class="table-liaisons">
+          <thead><tr>
+            <th>Équipe</th>
+            <th>Liaison</th>
+            <th>Arrivée</th>
+            <th>Début</th>
+            <th>Fin</th>
+            <th style="color:#93c5fd">Conc.</th>
+            <th style="color:#c4b5fd">Disp.</th>
+            <th style="color:#86efac">Dist.</th>
+            <th>Total</th>
+          </tr></thead>
+          <tbody>
+            ${toutesLiaisons.map((l,i)=>`<tr style="background:${i%2===0?'#f4f6f9':'white'}">
+              <td style="font-weight:700">${l.equipe}</td>
+              <td style="font-weight:700">${l.nom}</td>
+              <td style="text-align:center">${l.heure_arrivee||'—'}</td>
+              <td style="text-align:center">${l.heure_debut_traitement||'—'}</td>
+              <td style="text-align:center">${l.heure_fin_traitement||'—'}</td>
+              <td style="text-align:center;color:#1a56a0;font-weight:700">${l.colis_concentration||0}</td>
+              <td style="text-align:center;color:#7c3aed;font-weight:700">${l.colis_dispersion||0}</td>
+              <td style="text-align:center;color:#16a34a;font-weight:700">${l.colis_distribution||0}</td>
+              <td style="text-align:center;font-weight:700">${(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)}</td>
+            </tr>`).join('')}
+            <tr class="total-row">
+              <td colspan="2">TOTAL GÉNÉRAL</td>
+              <td colspan="3"></td>
+              <td style="text-align:center">${toutesLiaisons.reduce((s,l)=>s+(l.colis_concentration||0),0)}</td>
+              <td style="text-align:center">${toutesLiaisons.reduce((s,l)=>s+(l.colis_dispersion||0),0)}</td>
+              <td style="text-align:center">${toutesLiaisons.reduce((s,l)=>s+(l.colis_distribution||0),0)}</td>
+              <td style="text-align:center">${toutesLiaisons.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+
+      // Stocker les données pour export Excel
+      window._liaisonsData = toutesLiaisons;
+      window._dateLabel = dateLabel;
+    }
+
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+      <button class="btn-pdf" onclick="window.print()">🖨️ PDF / Imprimer</button>
+      <button class="btn-pdf" style="background:#16a34a" onclick="exporterExcel()">📊 Télécharger Excel</button>
+    </div>`;
     document.getElementById('content').innerHTML = html;
   }catch(e){
     document.getElementById('content').innerHTML = `<div class="card"><div class="empty">❌ Erreur : ${e.message}</div></div>`;
@@ -207,6 +265,60 @@ async function charger(){
 }
 
 charger();
+
+function exporterExcel(){
+  const liaisons = window._liaisonsData||[];
+  if(!liaisons.length){ alert('Aucune donnée à exporter'); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  // Feuille 1 : Toutes liaisons
+  const dataGlobal = [
+    ['Équipe','Liaison','Heure arrivée','Début traitement','Fin traitement','Concentration','Dispersion','Distribution','Total colis'],
+    ...liaisons.map(l=>[
+      l.equipe, l.nom,
+      l.heure_arrivee||'', l.heure_debut_traitement||'', l.heure_fin_traitement||'',
+      l.colis_concentration||0, l.colis_dispersion||0, l.colis_distribution||0,
+      (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)
+    ]),
+    ['TOTAL GÉNÉRAL','','','','',
+      liaisons.reduce((s,l)=>s+(l.colis_concentration||0),0),
+      liaisons.reduce((s,l)=>s+(l.colis_dispersion||0),0),
+      liaisons.reduce((s,l)=>s+(l.colis_distribution||0),0),
+      liaisons.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
+    ]
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(dataGlobal);
+  ws1['!cols'] = [{wch:15},{wch:20},{wch:12},{wch:15},{wch:15},{wch:14},{wch:12},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Toutes équipes');
+
+  // Feuille 2 : Par équipe
+  const equipes = ['Concentration','Soirée','Nuit'];
+  equipes.forEach(eq=>{
+    const lEq = liaisons.filter(l=>l.equipe===eq);
+    if(!lEq.length) return;
+    const dataEq = [
+      ['Liaison','Heure arrivée','Début traitement','Fin traitement','Concentration','Dispersion','Distribution','Total'],
+      ...lEq.map(l=>[
+        l.nom, l.heure_arrivee||'', l.heure_debut_traitement||'', l.heure_fin_traitement||'',
+        l.colis_concentration||0, l.colis_dispersion||0, l.colis_distribution||0,
+        (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)
+      ]),
+      ['TOTAL','','','',
+        lEq.reduce((s,l)=>s+(l.colis_concentration||0),0),
+        lEq.reduce((s,l)=>s+(l.colis_dispersion||0),0),
+        lEq.reduce((s,l)=>s+(l.colis_distribution||0),0),
+        lEq.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
+      ]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(dataEq);
+    ws['!cols'] = [{wch:20},{wch:12},{wch:15},{wch:15},{wch:14},{wch:12},{wch:14},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws, eq.substring(0,31));
+  });
+
+  const date = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
+  XLSX.writeFile(wb, `liaisons-${date}.xlsx`);
+}
 </script>
 </body>
 </html>
