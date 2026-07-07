@@ -202,7 +202,9 @@ function renderHeader(){
 function renderNav(){
   const items=S.agent.est_responsable
     ?[['vacation','🎙️','Vacation'],['pointage','📋','Pointage'],['admin','⚙️','Admin']]
-    :[['vacation','🎙️','Vacation'],['pointage','📋','Pointage']];
+    :(S.agent.est_chef_equipe||S.agent.equipe)
+    ?[['vacation','🎙️','Vacation'],['pointage','📋','Pointage']]
+    :[['vacation','🎙️','Vacation']];
   return `<nav class="nav-bas">${items.map(([v,i,l])=>`<button class="nav-item ${S.vue===v?'active':''}" onclick="changerVue('${v}')"><span class="nav-icon">${i}</span>${l}</button>`).join('')}</nav>`;
 }
 
@@ -548,7 +550,7 @@ async function chargerTout(){
   await chargerVacationEnCours();
   await chargerDernierCREquipePrecedente();
   await chargerToutesVacations();
-  if(S.agent.est_responsable) await chargerPointage();
+  if(S.agent.est_responsable || S.agent.est_chef_equipe || S.agent.equipe) await chargerPointage();
   const fresh=S.tousAgents.find(a=>a.id===S.agent.id);
   if(fresh) S.agent=fresh;
 }
@@ -875,9 +877,10 @@ async function sauvegarderAgent(id){
   const equipe=document.getElementById('edit-equipe')?.value||null;
   const code=document.getElementById('edit-code')?.value.trim();
   const admin=document.getElementById('edit-admin')?.checked||false;
+  const chef=document.getElementById('edit-chef')?.checked||false;
   if(!code) return toast('Code requis','err');
   try{
-    await db.patch('agents',`id=eq.${id}`,{equipe:equipe||null,code_acces:code,est_responsable:admin});
+    await db.patch('agents',`id=eq.${id}`,{equipe:equipe||null,code_acces:code,est_responsable:admin,est_chef_equipe:chef});
     toast('✅ Agent mis à jour !','ok'); fermerModal();
     await chargerAgents(); render();
   }catch(e){ toast('Erreur','err'); }
@@ -1033,7 +1036,7 @@ async function chargerPointage(){
 }
 
 function renderPointage(){
-  if(!S.agent.equipe && !S.agent.est_responsable) return `<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div>Aucune équipe assignée. Contacte ton responsable.</div></div>`;
+  if(!S.agent.equipe && !S.agent.est_responsable && !S.agent.est_chef_equipe) return `<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div>Aucune équipe assignée. Contacte ton responsable.</div></div>`;
   if(!S.vacationActive && !S.agent.est_responsable) return `<div class="card">
     <div class="card-title">📋 Pointage</div>
     <div class="info-banner">⚠️ Démarre d'abord une vacation dans l'onglet 🎙️ Vacation pour pouvoir faire le pointage.</div>
