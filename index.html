@@ -3,475 +3,1531 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Compte rendu – La Poste MLH</title>
-
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="theme-color" content="#1a56a0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Vacation MLH" />
+<title>Compte rendu de vacation – La Poste MLH</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Arial, sans-serif; background: #f4f6f9; color: #1a1f2e; max-width: 800px; margin: 0 auto; padding: 20px; }
-.header { background: #1a56a0; color: white; padding: 16px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
-.logo { width: 40px; height: 40px; background: #FFD700; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-.header-title { font-size: 16px; font-weight: 700; }
-.header-sub { font-size: 12px; opacity: 0.7; }
-.card { background: white; border-radius: 12px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-.card-title { font-size: 13px; font-weight: 700; color: #5a6478; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
-.equipe-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #1a56a0; }
-.equipe-title { font-size: 16px; font-weight: 700; color: #1a56a0; }
-.agent-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-.meta { font-size: 12px; color: #5a6478; margin-bottom: 12px; }
-.timeline-item { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-.timeline-time { font-weight: 700; font-size: 11px; color: #1a56a0; min-width: 40px; padding-top: 2px; }
-.timeline-type { font-weight: 700; font-size: 11px; margin-bottom: 2px; }
-.timeline-texte { font-size: 12px; color: #333; }
-.evt-photo { max-width: 100%; border-radius: 8px; margin-top: 6px; display: block; }
-.empty { color: #999; font-style: italic; font-size: 13px; padding: 8px 0; }
-.loader { text-align: center; padding: 40px; color: #5a6478; font-size: 14px; }
-.btn-pdf { display: block; width: 100%; padding: 14px; background: #1a56a0; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; margin-top: 16px; }
-.table-liaisons { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
-.table-liaisons th { background: #1a56a0; color: white; padding: 7px; text-align: center; }
-.table-liaisons th:first-child { text-align: left; }
-.table-liaisons td { padding: 7px; border-bottom: 1px solid #eee; text-align: center; }
-.table-liaisons td:first-child { text-align: left; font-weight: 600; }
-.table-liaisons tr:nth-child(even) { background: #f4f6f9; }
-.table-liaisons .total-row { background: #1a1f2e; color: white; font-weight: 700; }
-.section-title { font-size: 12px; font-weight: 700; color: #5a6478; text-transform: uppercase; letter-spacing: 0.05em; margin: 14px 0 8px; }
-.equipe-Concentration { border-left: 4px solid #1a56a0; padding-left: 12px; }
-.equipe-Soirée { border-left: 4px solid #7c3aed; padding-left: 12px; }
-.equipe-Nuit { border-left: 4px solid #1a1f2e; padding-left: 12px; }
-@media print { .btn-pdf { display: none; } }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --jaune: #FFD700; --jaune-pale: #FFF8DC;
+  --bleu: #1a56a0; --bleu-fonce: #0f3a72; --bleu-clair: #e8f0fb;
+  --gris: #f4f6f9; --gris-bord: #dde3ed;
+  --texte: #1a1f2e; --texte-doux: #5a6478;
+  --vert: #16a34a; --vert-pale: #dcfce7;
+  --rouge: #dc2626; --rouge-pale: #fee2e2;
+  --orange: #d97706; --orange-pale: #fef3c7;
+  --violet: #7c3aed; --violet-pale: #ede9fe;
+  --radius: 14px; --ombre: 0 2px 12px rgba(26,86,160,0.10);
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--gris); color: var(--texte); min-height: 100vh; max-width: 480px; margin: 0 auto; }
+.header { background: var(--bleu); padding: 18px 20px 14px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; }
+.header-logo { display: flex; align-items: center; gap: 10px; }
+.logo-box { width: 36px; height: 36px; background: var(--jaune); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.header-title { color: white; font-weight: 700; font-size: 16px; line-height: 1.1; }
+.header-sub { color: rgba(255,255,255,0.65); font-size: 11px; }
+.btn-deconnexion { background: rgba(255,255,255,0.15); border: none; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+.nav-bas { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; border-top: 1px solid var(--gris-bord); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0 8px; gap: 3px; cursor: pointer; border: none; background: none; color: var(--texte-doux); font-size: 10px; font-weight: 500; }
+.nav-item.active { color: var(--bleu); }
+.nav-icon { font-size: 22px; }
+.content { padding: 16px 16px 90px; }
+.card { background: white; border-radius: var(--radius); box-shadow: var(--ombre); padding: 18px; margin-bottom: 14px; }
+.card-title { font-size: 13px; font-weight: 700; color: var(--texte-doux); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
+.equipe-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 12px; }
+.equipe-badge.Concentration { background: var(--bleu-clair); color: var(--bleu); }
+.equipe-badge.Soirée { background: var(--violet-pale); color: var(--violet); }
+.equipe-badge.Nuit { background: #1a1f2e; color: white; }
+.equipe-badge.none { background: var(--gris); color: var(--texte-doux); }
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.badge.en_cours { background: var(--orange-pale); color: var(--orange); }
+.badge.terminee { background: var(--vert-pale); color: var(--vert); }
+.type-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.type-btn { padding: 16px 10px; border: 2px solid var(--gris-bord); border-radius: 12px; background: white; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; color: var(--texte); line-height: 1.4; }
+.type-btn:active { transform: scale(0.97); }
+.demande-item { border: 1px solid var(--gris-bord); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.demande-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.demande-type { font-weight: 700; font-size: 14px; }
+.demande-dates { font-size: 12px; color: var(--texte-doux); margin-top: 2px; }
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--texte-doux); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+.form-input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--gris-bord); border-radius: 10px; font-size: 14px; background: white; color: var(--texte); font-family: inherit; outline: none; }
+.form-input:focus { border-color: var(--bleu); }
+textarea.form-input { resize: none; }
+.btn-primary { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--bleu); color: white; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-mic { width: 100%; padding: 13px; border-radius: 10px; border: 2px solid var(--bleu); background: var(--bleu-clair); color: var(--bleu); font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; margin-bottom: 10px; display:flex; align-items:center; justify-content:center; gap:8px; }
+.btn-mic.listening { background: var(--rouge-pale); border-color: var(--rouge); color: var(--rouge); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+.login-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; background: var(--bleu); }
+.login-logo { width: 72px; height: 72px; background: var(--jaune); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 38px; margin-bottom: 16px; }
+.login-title { color: white; font-size: 22px; font-weight: 800; margin-bottom: 4px; text-align:center; }
+.login-sub { color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 32px; }
+.login-card { background: white; border-radius: 18px; padding: 24px; width: 100%; max-width: 360px; }
+.toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #1a1f2e; color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 999; max-width: 320px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: slideDown 0.2s ease; }
+.toast.ok { background: var(--vert); }
+.toast.err { background: var(--rouge); }
+@keyframes slideDown { from { transform: translateX(-50%) translateY(-10px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+.admin-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
+.admin-tab { flex-shrink: 0; padding: 9px 12px; border-radius: 9px; border: 1.5px solid var(--gris-bord); background: white; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--texte-doux); }
+.admin-tab.active { border-color: var(--bleu); background: var(--bleu); color: white; }
+.filtre-equipes { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; }
+.filtre-btn { flex-shrink: 0; padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--gris-bord); background: white; font-size: 11px; font-weight: 600; cursor: pointer; color: var(--texte-doux); }
+.filtre-btn.active { border-color: var(--bleu); background: var(--bleu-clair); color: var(--bleu); }
+.empty-state { text-align: center; padding: 40px 20px; color: var(--texte-doux); font-size: 14px; }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+.loader { text-align: center; padding: 40px; color: var(--texte-doux); }
+.info-banner { background: var(--bleu-clair); border-radius: 10px; padding: 11px 14px; font-size: 12px; color: var(--bleu-fonce); margin-bottom: 14px; line-height: 1.5; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
+.modal { background: white; border-radius: 18px 18px 0 0; padding: 24px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+.modal-btns { display: flex; gap: 10px; margin-top: 16px; }
+.btn-annuler { flex: 1; padding: 13px; border-radius: 10px; border: 1.5px solid var(--gris-bord); background: white; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--texte-doux); }
+.agent-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--gris); cursor: pointer; }
+.agent-item:last-child { border-bottom: none; }
+.agent-name { font-weight: 600; font-size: 14px; }
+.agent-code { font-size: 11px; color: var(--texte-doux); font-family: monospace; }
+.timeline-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--gris); }
+.timeline-time { font-weight: 700; font-size: 12px; color: var(--bleu); flex-shrink: 0; width: 42px; }
+.timeline-content { flex: 1; font-size: 13px; }
+.cat-section { margin-bottom: 16px; }
+.cat-header { font-weight: 700; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.cat-item { font-size: 13px; padding: 8px 10px; background: var(--gris); border-radius: 8px; margin-bottom: 6px; }
+.changer-mdp-link { text-align: center; margin-top: 14px; }
+.changer-mdp-link button { background: none; border: none; color: var(--bleu); font-size: 13px; cursor: pointer; text-decoration: underline; }
+.view-toggle { display: flex; gap: 6px; margin-bottom: 14px; }
+.view-toggle button { flex: 1; padding: 8px; border-radius: 8px; border: 1.5px solid var(--gris-bord); background: white; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--texte-doux); }
+.view-toggle button.active { border-color: var(--bleu); background: var(--bleu-clair); color: var(--bleu); }
+.lien-danger { background: none; border: none; color: var(--rouge); font-size: 13px; cursor: pointer; text-decoration: underline; }
+.evt-photo { width: 100%; border-radius: 10px; margin-top: 8px; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
-<div class="header">
-  <div class="logo">🎙️</div>
-  <div>
-    <div class="header-title">Comptes rendus de vacation</div>
-    <div class="header-sub" id="periode-label">La Poste – Mulhouse</div>
-  </div>
-</div>
-<div id="content"><div class="loader">⏳ Chargement des comptes rendus...</div></div>
-
+<div id="app"></div>
 <script>
 const SUPABASE_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_dES9U1T02LLNFXtR2RgtLg_b4UWK5cv';
-const EQUIPES = ['Concentration','Soirée','Nuit'];
-const ICONS = {Concentration:'☀️', Soirée:'🌆', Nuit:'🌙'};
-const TYPES = {liaison:'🚛',colis:'📦',incident:'⚠️',anomalie:'🔧'};
-const COLORS = {liaison:'#1a56a0',colis:'#d97706',incident:'#dc2626',anomalie:'#7c3aed'};
+const EMAILJS_SERVICE = 'service_qtkzz3d';
+const EMAILJS_TEMPLATE = 'template_pm7xbso';
+const EMAILJS_KEY = 'eqbebprUUz1zVz_tv';
+const EQUIPES = ['Concentration', 'Soirée', 'Nuit'];
+const ORDRE_EQUIPES = {Concentration:'Nuit', Soirée:'Concentration', Nuit:'Soirée'}; // équipe précédente
+const TYPES_EVT = {
+  liaison: {icon:'🚛', label:'Liaison', couleur:'#1a56a0'},
+  colis: {icon:'📦', label:'Colis', couleur:'#d97706'},
+  incident: {icon:'⚠️', label:'Incident', couleur:'#dc2626'},
+  anomalie: {icon:'🔧', label:'Anomalie', couleur:'#7c3aed'},
+};
 
-async function sbGet(path){
+const LIAISONS_PAR_EQUIPE = {
+  'Concentration': ['Concentration 1','Concentration 2','Concentration 3','Erstein 1'],
+  'Soirée': ['Erstein 1','Erstein 2','Erstein 3','Erstein 4','SUPP'],
+  'Nuit': ['Erstein 4','Erstein 5','Erstein 6','Chronopost','SUPP'],
+};
+
+emailjs.init(EMAILJS_KEY);
+
+async function sbFetch(method, path, body){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': method==='POST' ? 'return=representation' : 'return=minimal'
+    },
+    body: body ? JSON.stringify(body) : undefined
   });
+  if(!res.ok){ const e = await res.json().catch(()=>{}); throw new Error(e?.message||'Erreur'); }
   const t = await res.text(); return t ? JSON.parse(t) : [];
 }
+const db = {
+  get: (t,q='') => sbFetch('GET',`${t}?${q}`),
+  post: (t,d) => sbFetch('POST',t,d),
+  patch: (t,q,d) => sbFetch('PATCH',`${t}?${q}`,d),
+  delete: (t,q) => sbFetch('DELETE',`${t}?${q}`),
+};
 
-function fmtDateTime(iso){
-  if(!iso) return '—';
-  const d = new Date(iso.endsWith('Z')?iso:iso+'Z');
-  return d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+let S = {
+  agent:null, vue:'vacation', adminTab:'vacations', filtreEquipe:'Toutes',
+  vacationActive:null, evenementsVacation:[], dernierCREquipePrecedente:null,
+  toutesVacations:[], tousAgents:[], compteRenduActuel:null, vueCR:'categorie',
+  modal:null, evtTexte:'', evtPhotos:[], loading:false, editAgentId:null, liaison:{}, liaisonsModal:[],
+  pointageEquipe:[], pointageActif:null, pointageEtape:'selection',
+};
+
+function dateLocale(d){const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const dd=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${dd}`;}
+function toast(msg,type='ok'){const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),3500);}
+function equipeBadge(eq){
+  const e=eq||'—'; const cls=EQUIPES.includes(e)?e:'none';
+  const icons={Concentration:'☀️',Soirée:'🌆',Nuit:'🌙'};
+  return `<span class="equipe-badge ${cls}">${icons[e]||'👤'} ${e}</span>`;
 }
-function fmtHeure(iso){
-  if(!iso) return '—';
-  const d = new Date(iso.endsWith('Z')?iso:iso+'Z');
-  return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-}
+function fmtDateTime(iso){ if(!iso) return '—'; const d=new Date(iso.endsWith('Z')?iso:iso+'Z'); return d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+function fmtHeure(iso){ const d=new Date(iso.endsWith('Z')?iso:iso+'Z'); return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
 function parsePhotos(photoUrl){
   if(!photoUrl) return [];
   try{ const p=JSON.parse(photoUrl); return Array.isArray(p)?p:[photoUrl]; }
   catch(e){ return [photoUrl]; }
 }
-
-function calcDureePointage(p){
-  if(!p.heure_debut||!p.heure_fin||p.statut!=='present') return '';
-  const toMin = h => { const parts=h.split(':').map(Number); return parts[0]*60+parts[1]; };
-  let total = toMin(p.heure_fin) - toMin(p.heure_debut);
-  if(total<0) total+=24*60;
-  // Déduire pauses
-  if(p.heure_debut_pause1&&p.heure_fin_pause1){
-    let pause = toMin(p.heure_fin_pause1)-toMin(p.heure_debut_pause1);
-    if(pause<0) pause+=24*60;
-    total-=pause;
-  }
-  if(p.heure_debut_pause2&&p.heure_fin_pause2){
-    let pause = toMin(p.heure_fin_pause2)-toMin(p.heure_debut_pause2);
-    if(pause<0) pause+=24*60;
-    total-=pause;
-  }
-  return Math.round(total/6)/10;
+function renderPhotos(photoUrl, style=''){
+  const photos=parsePhotos(photoUrl);
+  if(!photos.length) return '';
+  return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px">${photos.map(url=>`<img src="${url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px${style?';'+style:''}" />`).join('')}</div>`;
 }
 
-function calcDuree(debut, fin){
-  if(!debut||!fin) return '';
-  const partsDeb = debut.split(':').map(Number);
-  const partsFin = fin.split(':').map(Number);
-  const dh=partsDeb[0], dm=partsDeb[1];
-  const fh=partsFin[0], fm=partsFin[1];
-  let totalMin = (fh*60+fm) - (dh*60+dm);
-  if(totalMin < 0) totalMin += 24*60; // passage minuit
-  if(totalMin === 0) return '';
-  return Math.round(totalMin/6)/10; // format décimal arrondi à 0.1
+function render(){
+  const app=document.getElementById('app');
+  if(!S.agent){app.innerHTML=renderLogin();return;}
+  let modalHtml='';
+  if(S.modal==='liaison-structuree') modalHtml=renderModalLiaison();
+  else if(S.modal && S.modal.startsWith('evenement-')) modalHtml=renderModalEvenement(S.modal.replace('evenement-',''));
+  else if(S.modal==='compte-rendu') modalHtml=renderModalCompteRendu();
+  else if(S.modal==='changer-code') modalHtml=renderModalChangerCode();
+  else if(S.modal==='edit-agent') modalHtml=renderModalEditAgent();
+  else if(S.modal==='accident') modalHtml=renderModalAccident();
+  else if(S.modal==='recap-nuit') modalHtml=renderModalRecapNuit();
+  app.innerHTML=`${renderHeader()}<div class="content">${S.loading?'<div class="loader">⏳ Chargement...</div>':renderVue()}</div>${renderNav()}${modalHtml}`;
 }
 
-async function charger(){
-  const params = new URLSearchParams(window.location.search);
-  const vacationId = params.get('id');
+function renderHeader(){
+  return `<header class="header">
+    <div class="header-logo"><div class="logo-box">🎙️</div>
+    <div><div class="header-title">Vacation – La Poste</div><div class="header-sub">${S.agent.prenom} ${S.agent.nom}</div></div></div>
+    <button class="btn-deconnexion" onclick="deconnexion()">Déconnexion</button>
+  </header>`;
+}
+function renderNav(){
+  const items=S.agent.est_responsable
+    ?[['vacation','🎙️','Vacation'],['pointage','📋','Pointage'],['admin','⚙️','Admin']]
+    :(S.agent.est_chef_equipe||S.agent.equipe)
+    ?[['vacation','🎙️','Vacation'],['pointage','📋','Pointage']]
+    :[['vacation','🎙️','Vacation']];
+  return `<nav class="nav-bas">${items.map(([v,i,l])=>`<button class="nav-item ${S.vue===v?'active':''}" onclick="changerVue('${v}')"><span class="nav-icon">${i}</span>${l}</button>`).join('')}</nav>`;
+}
 
-  // Période : 11h00 hier → maintenant
-  const maintenant = new Date();
-  const hier = new Date(maintenant);
-  hier.setDate(hier.getDate()-1);
-  const dateDebut = hier.toISOString().split('T')[0] + 'T09:00:00Z'; // 11h UTC+2
-  const dateFin = maintenant.toISOString();
-  const dateLabel = `${hier.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})} 11h00 → ${maintenant.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})} ${fmtHeure(maintenant.toISOString())}`;
-  document.getElementById('periode-label').textContent = dateLabel;
+function renderVue(){
+  switch(S.vue){
+    case 'vacation': return renderVacation();
+    case 'pointage': return renderPointage();
+    case 'admin': return renderAdmin();
+    default: return renderVacation();
+  }
+}
 
-  try{
-    const agents = await sbGet('agents?select=*');
-    let vacations;
+// ── VACATION (agent) ───────────────────────────────────────────
+function renderVacation(){
+  if(!S.agent.equipe){
+    return `<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div>Aucune équipe ne t'a été assignée. Contacte ton responsable.</div></div>`;
+  }
 
-    if(vacationId){
-      // Mode lien direct : afficher UNE vacation + toutes celles de la même période
-      vacations = await sbGet(`vacations?created_at=gte.${dateDebut}&statut=eq.terminee&order=equipe.asc,date_debut.asc`);
-      // Si la vacation demandée n'est pas dans la période, l'ajouter quand même
-      const dansListe = vacations.find(v=>v.id===vacationId);
-      if(!dansListe){
-        const vSeule = await sbGet(`vacations?id=eq.${vacationId}&select=*`);
-        if(vSeule.length) vacations = [...vSeule, ...vacations];
-      }
-    } else {
-      // Mode récap : dernière vacation par équipe
-      const toutes = await sbGet(`vacations?created_at=gte.${dateDebut}&statut=eq.terminee&order=date_fin.desc`);
-      const dernieres = {};
-      toutes.forEach(v=>{ if(!dernieres[v.equipe]) dernieres[v.equipe]=v; });
-      vacations = Object.values(dernieres);
-    }
+  let html = '';
 
-    if(!vacations.length){
-      document.getElementById('content').innerHTML = '<div class="card"><div class="empty">Aucune vacation enregistrée sur cette période.</div></div>';
-      return;
-    }
+  // Compte rendu de l'équipe précédente
+  if(S.dernierCREquipePrecedente){
+    const cr = S.dernierCREquipePrecedente;
+    const agentPrec = S.tousAgents.find(a=>a.id===cr.agent_id);
+    html += `<div class="card" onclick="ouvrirCompteRenduPasse('${cr.id}')" style="cursor:pointer">
+      <div class="card-title">📥 Passation — ${ORDRE_EQUIPES[S.agent.equipe]}</div>
+      <div style="font-size:13px;color:var(--texte-doux)">Par ${agentPrec?.prenom||'?'} ${agentPrec?.nom||''} · ${fmtDateTime(cr.date_fin)}</div>
+      <div class="info-banner" style="margin-top:10px;margin-bottom:0">👆 Touche pour voir le compte rendu complet de l'équipe précédente</div>
+    </div>`;
+  } else {
+    html += `<div class="card"><div class="info-banner" style="margin-bottom:0">Aucun compte rendu disponible pour l'équipe précédente (${ORDRE_EQUIPES[S.agent.equipe]}).</div></div>`;
+  }
 
-    let html = '';
-    for(const equipe of EQUIPES){
-      const vacsEquipe = vacations.filter(v=>v.equipe===equipe);
-      if(!vacsEquipe.length) continue;
+  if(!S.vacationActive){
+    html += `<div class="card">
+      <div class="card-title">Démarrer ma vacation</div>
+      <div class="info-banner">🎙️ Démarre ta vacation pour commencer à enregistrer tes liaisons, colis, incidents et anomalies tout au long du service.</div>
+      <button class="btn-primary" onclick="demarrerVacation()">▶️ Démarrer ma vacation</button>
+      <div class="changer-mdp-link"><button onclick="ouvrirChangerCode()">🔑 Changer mon code d'accès</button></div>
+    </div>`;
+    html += renderMesAnciennesVacations();
+    return html;
+  }
 
-      html += `<div class="card equipe-${equipe}">
-        <div class="equipe-header">
-          <span style="font-size:20px">${ICONS[equipe]||'👤'}</span>
-          <div class="equipe-title">${equipe.toUpperCase()}</div>
+  const evts = S.evenementsVacation||[];
+  html += `
+  <div class="card">
+    <div class="card-title">Vacation en cours · ${equipeBadge(S.agent.equipe)}</div>
+    <div class="info-banner">🎙️ Appuie sur un bouton, dicte ou tape ta phrase, valide. Recommence autant de fois que nécessaire.</div>
+    <div class="type-btns" style="margin-bottom:8px">
+      <button class="type-btn" onclick="ouvrirSaisieEvenement('liaison')">🚛<br>Liaison</button>
+      <button class="type-btn" onclick="ouvrirSaisieEvenement('incident')">⚠️<br>Incident</button>
+    </div>
+    <div class="type-btns">
+      <button class="type-btn" onclick="ouvrirSaisieEvenement('anomalie')">🔧<br>Anomalie</button>
+      <button class="type-btn" style="background:#fff0f0;border-color:#dc262633;color:var(--rouge);font-size:15px;padding:14px" onclick="ouvrirAccident()">🚨<br>Accident</button>
+    </div>
+    <div style="margin-top:8px">
+      <button class="type-btn" style="width:100%;background:#fff0f0;border-color:#dc262633;color:var(--rouge);font-size:15px;padding:14px" onclick="ouvrirAccident()">🚨 Déclarer un accident</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Éléments enregistrés (${evts.length})</div>
+    ${!evts.length?`<div class="empty-state"><div class="empty-icon">📭</div>Rien pour l'instant.</div>`:
+      evts.map(e=>{
+        const t=TYPES_EVT[e.type];
+        return `<div class="demande-item">
+          <div class="demande-header">
+            <div>
+              <div class="demande-type" style="color:${t.couleur}">${t.icon} ${t.label} · ${fmtHeure(e.created_at)}</div>
+              <div class="demande-dates" style="margin-top:4px">${e.texte}</div>
+            </div>
+          </div>
+          ${renderPhotos(e.photo_url)}
         </div>`;
+      }).join('')
+    }
+  </div>
 
-      for(const v of vacsEquipe){
-        const agent = agents.find(a=>a.id===v.agent_id);
-        const [evts, liaisons] = await Promise.all([
-          sbGet(`evenements_vacation?vacation_id=eq.${v.id}&order=created_at.asc`),
-          sbGet(`liaisons?vacation_id=eq.${v.id}&order=created_at.asc`),
-        ]);
+  <div class="card">
+    <button class="btn-primary" style="background:var(--vert)" onclick="terminerVacation()">✅ Terminer la vacation</button>
+  </div>`;
+  html += renderMesAnciennesVacations();
+  return html;
+}
 
-        html += `<div class="agent-name">${agent?.prenom||'?'} ${agent?.nom||''}</div>
-          <div class="meta">${fmtDateTime(v.date_debut)} → ${fmtDateTime(v.date_fin)}</div>`;
+function renderMesAnciennesVacations(){
+  const maintenant = new Date();
+  const il12hAgo = new Date(maintenant.getTime() - 12*60*60*1000);
+  const mesVac = (S.toutesVacations||[]).filter(v=>{
+    if(v.agent_id!==S.agent.id || v.statut!=='terminee') return false;
+    const dateFin = new Date(v.date_fin.endsWith('Z')?v.date_fin:v.date_fin+'Z');
+    return dateFin >= il12hAgo;
+  });
+  if(!mesVac.length) return '';
+  return `<div class="card">
+    <div class="card-title">Ma vacation récente</div>
+    <div class="info-banner" style="margin-bottom:10px">📋 Visible pendant 12h après la fin de ta vacation.</div>
+    ${mesVac.map(v=>`
+      <div class="demande-item" onclick="ouvrirCompteRendu('${v.id}')" style="cursor:pointer">
+        <div class="demande-header">
+          <div><div class="demande-type" style="font-size:13px">${fmtDateTime(v.date_debut)} → ${fmtDateTime(v.date_fin)}</div></div>
+          <span class="badge terminee">✅ Voir</span>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
 
-        // Tableau liaisons structurées
-        if(liaisons.length){
-          html += `<div class="section-title">🚛 Liaisons</div>
-          <table class="table-liaisons">
-            <thead><tr>
-              <th>Liaison</th><th>Arrivée</th><th>Début</th><th>Fin</th><th>Durée (h)</th>
-              <th style="color:#93c5fd">Conc.</th>
-              <th style="color:#c4b5fd">Disp.</th>
-              <th style="color:#86efac">Dist.</th>
-              <th>Total</th>
-            </tr></thead>
+// ── SAISIE ÉVÉNEMENT ────────────────────────────────────────────
+function ouvrirSaisieEvenement(type){
+  if(type==='liaison'){ S.modal='liaison-structuree'; S.liaison={}; render(); return; }
+  S.modal='evenement-'+type; S.evtTexte=''; S.evtPhotos=[]; render();
+}
+
+// Check URL params for direct vacation link
+const urlParams = new URLSearchParams(window.location.search);
+const vacationIdParam = urlParams.get('vacation');
+if(vacationIdParam) S.vacationDirectId = vacationIdParam;
+
+async function initApp(){
+  // Restaurer la session si elle existe
+  const savedSession = localStorage.getItem('vacation_session');
+  if(savedSession){
+    try{
+      const session = JSON.parse(savedSession);
+      const res = await db.get('agents', `id=eq.${session.id}&code_acces=eq.${encodeURIComponent(session.code)}&select=*`);
+      if(res.length){
+        S.agent = res[0];
+        S.loading = true; render();
+        await chargerTout();
+        S.loading = false;
+        if(S.vacationDirectId){
+          await ouvrirCompteRendu(S.vacationDirectId);
+          S.vacationDirectId = null;
+        }
+        render();
+        return;
+      } else {
+        localStorage.removeItem('vacation_session');
+      }
+    }catch(e){ localStorage.removeItem('vacation_session'); }
+  }
+  render();
+}
+initApp();
+
+let recognition=null;
+function demarrerEcoute(targetId){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ toast('Reconnaissance vocale non disponible','err'); return; }
+  recognition = new SR();
+  recognition.lang='fr-FR'; recognition.continuous=false; recognition.interimResults=false;
+  recognition.onresult=(ev)=>{
+    const transcript=ev.results[0][0].transcript;
+    const el=document.getElementById(targetId);
+    if(el){ el.value=(el.value?el.value+' ':'')+transcript; S.evtTexte=el.value; }
+  };
+  recognition.onerror=()=>toast('Erreur micro, réessaie','err');
+  recognition.start();
+  toast('🎙️ Parle maintenant...','ok');
+}
+
+function gererPhotoEvt(input){
+  const file=input.files[0]; if(!file) return;
+  toast('📷 Chargement de la photo...','ok');
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const img=new Image();
+    img.onload=async ()=>{
+      // Compresser l'image
+      const maxDim=1200;
+      let w=img.width, h=img.height;
+      if(w>h && w>maxDim){ h=Math.round(h*maxDim/w); w=maxDim; }
+      else if(h>maxDim){ w=Math.round(w*maxDim/h); h=maxDim; }
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      // Convertir en blob
+      canvas.toBlob(async (blob)=>{
+        try{
+          // Upload vers Supabase Storage
+          const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+          const res = await fetch(`${SUPABASE_URL}/storage/v1/object/photos/${fileName}`, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'image/jpeg',
+            },
+            body: blob
+          });
+          if(!res.ok) throw new Error('Upload échoué');
+          // Construire l'URL publique
+          if(!S.evtPhotos) S.evtPhotos=[];
+          S.evtPhotos.push(`${SUPABASE_URL}/storage/v1/object/public/photos/${fileName}`);
+          toast(`✅ Photo ${S.evtPhotos.length} chargée !`,'ok');
+          render();
+        }catch(err){
+          toast('Erreur upload photo: '+err.message,'err');
+          console.error(err);
+        }
+      }, 'image/jpeg', 0.7);
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function supprimerPhoto(index){
+  S.evtPhotos.splice(index,1);
+  render();
+}
+
+async function validerEvenement(type){
+  const texte=document.getElementById('evt-texte-input')?.value.trim();
+  if(!texte) return toast('Saisis ou dicte un texte','err');
+  try{
+    const photosJson = (S.evtPhotos&&S.evtPhotos.length) ? JSON.stringify(S.evtPhotos) : null;
+    await db.post('evenements_vacation',{vacation_id:S.vacationActive.id, type, texte, photo_url:photosJson});
+    toast('✅ Ajouté !','ok');
+    fermerModal();
+    await chargerVacationEnCours();
+    render();
+  }catch(e){ toast('Erreur ajout: '+e.message,'err'); console.error(e); }
+}
+
+function renderModalEvenement(type){
+  const t=TYPES_EVT[type];
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title" style="color:${t.couleur}">${t.icon} ${t.label}</div>
+      <div class="form-group">
+        <label class="form-label">Dicte ou tape ta phrase</label>
+        <textarea class="form-input" id="evt-texte-input" rows="4" placeholder="Ex : Liaison Strasbourg, arrivée 14h05...">${S.evtTexte||''}</textarea>
+      </div>
+      <button class="btn-mic" onclick="demarrerEcoute('evt-texte-input')">🎙️ Dicter au micro</button>
+      ${(type==='incident'||type==='anomalie')?`
+      <div class="form-group">
+        <label class="form-label">Photo (optionnel)</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+        <label style="flex:1;padding:10px;border:1.5px solid var(--gris-bord);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;background:var(--bleu-clair);color:var(--bleu)">
+          📷 Appareil photo<input type="file" accept="image/*" capture="environment" onchange="gererPhotoEvt(this)" style="display:none" /></label>
+        <label style="flex:1;padding:10px;border:1.5px solid var(--gris-bord);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;background:var(--gris);color:var(--texte)">
+          🖼️ Galerie<input type="file" accept="image/*" onchange="gererPhotoEvt(this)" style="display:none" /></label>
+      </div>
+        ${(S.evtPhotos&&S.evtPhotos.length)?`
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px">
+            ${S.evtPhotos.map((url,i)=>`
+              <div style="position:relative">
+                <img src="${url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px" />
+                <button onclick="supprimerPhoto(${i})" style="position:absolute;top:2px;right:2px;background:rgba(220,38,38,0.9);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;cursor:pointer">✕</button>
+              </div>`).join('')}
+          </div>
+          <div style="font-size:11px;color:var(--texte-doux);margin-top:4px">${S.evtPhotos.length} photo(s)</div>
+        `:''}
+      </div>`:''}
+      <div class="modal-btns">
+        <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+        <button class="btn-primary" style="flex:1;background:${t.couleur}" onclick="validerEvenement('${type}')">Ajouter</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── VACATION : DÉMARRER / TERMINER ─────────────────────────────
+async function demarrerVacation(){
+  try{
+    const res=await db.post('vacations',{agent_id:S.agent.id, equipe:S.agent.equipe, statut:'en_cours'});
+    S.vacationActive=res[0]; S.evenementsVacation=[];
+    toast('🎙️ Vacation démarrée !','ok'); render();
+  }catch(e){ toast('Erreur démarrage','err'); }
+}
+async function terminerVacation(){
+  if(!confirm('Terminer la vacation et générer le compte rendu ?')) return;
+  try{
+    await db.patch('vacations',`id=eq.${S.vacationActive.id}`,{statut:'terminee', date_fin:new Date().toISOString()});
+    toast('✅ Vacation terminée !','ok');
+    const estNuit = S.agent.equipe === 'Nuit';
+    S.vacationActive=null;
+    await chargerTout();
+    render();
+    // Si équipe Nuit, proposer d'envoyer le récap maintenant
+    if(estNuit){
+      setTimeout(()=>{
+        S.modal='recap-nuit';
+        render();
+      }, 800);
+    }
+  }catch(e){ toast('Erreur','err'); }
+}
+
+function renderModalRecapNuit(){
+  return `<div class="modal-overlay">
+    <div class="modal">
+      <div class="modal-title">📧 Envoyer le récapitulatif ?</div>
+      <p style="font-size:14px;color:var(--texte-doux);margin-bottom:20px;line-height:1.5">
+        La vacation de nuit est terminée.<br>
+        Veux-tu envoyer le récapitulatif maintenant, ou laisser l'envoi automatique à 7h30 ?
+      </p>
+      <button class="btn-primary" style="margin-bottom:10px" onclick="envoyerRecapEtFermer()">📧 Envoyer maintenant</button>
+      <button class="btn-annuler" style="width:100%" onclick="fermerModal()">⏰ Laisser l'envoi automatique à 7h30</button>
+    </div>
+  </div>`;
+}
+
+async function envoyerRecapEtFermer(){
+  fermerModal();
+  toast('📧 Ouverture en cours...','ok');
+  window.open('https://guillaume-prod.github.io/vacation-app/recap.html','_blank');
+}
+
+// ── CHARGEMENT DONNÉES ──────────────────────────────────────────
+async function chargerVacationEnCours(){
+  try{
+    const res=await db.get('vacations',`agent_id=eq.${S.agent.id}&statut=eq.en_cours&order=created_at.desc&limit=1`);
+    S.vacationActive=res[0]||null;
+    S.evenementsVacation = S.vacationActive ? await db.get('evenements_vacation',`vacation_id=eq.${S.vacationActive.id}&order=created_at.asc`) : [];
+  }catch(e){ S.vacationActive=null; S.evenementsVacation=[]; }
+}
+
+async function chargerDernierCREquipePrecedente(){
+  if(!S.agent.equipe){ S.dernierCREquipePrecedente=null; return; }
+  const eqPrec = ORDRE_EQUIPES[S.agent.equipe];
+  try{
+    const res=await db.get('vacations',`equipe=eq.${eqPrec}&statut=eq.terminee&order=date_fin.desc&limit=1`);
+    S.dernierCREquipePrecedente=res[0]||null;
+  }catch(e){ S.dernierCREquipePrecedente=null; }
+}
+
+async function chargerToutesVacations(){
+  try{ S.toutesVacations=await db.get('vacations','order=created_at.desc&limit=100'); }
+  catch(e){ S.toutesVacations=[]; }
+}
+async function chargerAgents(){
+  try{ S.tousAgents=await db.get('agents','order=nom.asc'); }
+  catch(e){ S.tousAgents=[]; }
+}
+
+async function chargerTout(){
+  await chargerAgents();
+  await chargerVacationEnCours();
+  await chargerDernierCREquipePrecedente();
+  await chargerToutesVacations();
+  if(S.agent.est_responsable || S.agent.est_chef_equipe || S.agent.equipe) await chargerPointage();
+  const fresh=S.tousAgents.find(a=>a.id===S.agent.id);
+  if(fresh) S.agent=fresh;
+}
+
+// ── COMPTE RENDU (vue détaillée) ───────────────────────────────
+async function ouvrirCompteRendu(vacationId){
+  try{
+    const evts=await db.get('evenements_vacation',`vacation_id=eq.${vacationId}&order=created_at.asc`);
+    const v=(S.toutesVacations||[]).find(x=>x.id===vacationId);
+    S.compteRenduActuel={vacation:v, evenements:evts};
+    S.vueCR='categorie';
+    S.modal='compte-rendu';
+    render();
+  }catch(e){ toast('Erreur chargement','err'); }
+}
+async function ouvrirCompteRenduPasse(vacationId){ await ouvrirCompteRendu(vacationId); }
+
+function setVueCR(v){ S.vueCR=v; render(); }
+
+function renderModalCompteRendu(){
+  const cr=S.compteRenduActuel; if(!cr) return '';
+  const agent=S.tousAgents.find(a=>a.id===cr.vacation.agent_id);
+  const parCategorie={liaison:[],colis:[],incident:[],anomalie:[]};
+  cr.evenements.forEach(e=>{ if(parCategorie[e.type]) parCategorie[e.type].push(e); });
+
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">📋 Compte rendu — ${agent?.prenom||'?'} ${agent?.nom||''}</div>
+      ${equipeBadge(cr.vacation.equipe)}
+      <div style="font-size:12px;color:var(--texte-doux);margin-bottom:14px">${fmtDateTime(cr.vacation.date_debut)} → ${fmtDateTime(cr.vacation.date_fin)}</div>
+
+      <div class="view-toggle">
+        <button class="${S.vueCR==='categorie'?'active':''}" onclick="setVueCR('categorie')">📂 Par catégorie</button>
+        <button class="${S.vueCR==='chrono'?'active':''}" onclick="setVueCR('chrono')">🕐 Chronologique</button>
+        <button class="${S.vueCR==='liaisons'?'active':''}" onclick="setVueCR('liaisons');chargerLiaisonsModal()">📊 Liaisons</button>
+      </div>
+
+      ${S.vueCR==='categorie'?`
+        ${!cr.evenements.length?`<div class="empty-state"><div class="empty-icon">📭</div>Aucun élément enregistré.</div>`:
+        Object.entries(parCategorie).map(([type,liste])=>{
+          if(!liste.length) return '';
+          const t=TYPES_EVT[type];
+          return `<div class="cat-section">
+            <div class="cat-header" style="color:${t.couleur}">${t.icon} ${t.label} (${liste.length})</div>
+            ${liste.map(e=>`<div class="cat-item">${e.texte}${renderPhotos(e.photo_url)}</div>`).join('')}
+          </div>`;
+        }).join('')}
+      `:`
+        ${!cr.evenements.length?`<div class="empty-state"><div class="empty-icon">📭</div>Aucun élément enregistré.</div>`:
+        cr.evenements.map(e=>{
+          const t=TYPES_EVT[e.type];
+          return `<div class="timeline-item">
+            <div class="timeline-time">${fmtHeure(e.created_at)}</div>
+            <div class="timeline-content"><strong style="color:${t.couleur}">${t.icon} ${t.label}</strong><br>${e.texte}${renderPhotos(e.photo_url)}</div>
+          </div>`;
+        }).join('')}
+      `}
+      ${S.vueCR==='liaisons'?`
+        ${!(S.liaisonsModal&&S.liaisonsModal.length)?'<div class="empty-state"><div class="empty-icon">🚛</div>Aucune liaison structurée enregistrée.</div>':`
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr style="background:#1a56a0;color:white">
+                <th style="padding:8px;text-align:left">Liaison</th>
+                <th style="padding:8px">Arrivée</th>
+                <th style="padding:8px">Début</th>
+                <th style="padding:8px">Fin</th>
+                <th style="padding:8px;color:#93c5fd">Conc.</th>
+                <th style="padding:8px;color:#c4b5fd">Disp.</th>
+                <th style="padding:8px;color:#86efac">Dist.</th>
+                <th style="padding:8px">Total</th>
+              </tr>
+            </thead>
             <tbody>
-              ${liaisons.map((l,i)=>`<tr>
-                <td>${l.nom}</td>
-                <td>${l.heure_arrivee||'—'}</td>
-                <td>${l.heure_debut_traitement||'—'}</td>
-                <td>${l.heure_fin_traitement||'—'}</td>
-                <td style="color:#1a56a0;font-weight:700">${l.colis_concentration||0}</td>
-                <td style="color:#7c3aed;font-weight:700">${l.colis_dispersion||0}</td>
-                <td style="color:#16a34a;font-weight:700">${l.colis_distribution||0}</td>
-                <td style="font-weight:700">${(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)}</td>
-              </tr>`).join('')}
-              <tr class="total-row">
-                <td>TOTAL</td><td colspan="4"></td>
-                <td>${liaisons.reduce((s,l)=>s+(l.colis_concentration||0),0)}</td>
-                <td>${liaisons.reduce((s,l)=>s+(l.colis_dispersion||0),0)}</td>
-                <td>${liaisons.reduce((s,l)=>s+(l.colis_distribution||0),0)}</td>
-                <td>${liaisons.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)}</td>
+              ${(S.liaisonsModal||[]).map((l,i)=>`
+                <tr style="background:${i%2===0?'#f4f6f9':'white'}">
+                  <td style="padding:8px;font-weight:700">${l.nom}</td>
+                  <td style="padding:8px;text-align:center">${l.heure_arrivee||'—'}</td>
+                  <td style="padding:8px;text-align:center">${l.heure_debut_traitement||'—'}</td>
+                  <td style="padding:8px;text-align:center">${l.heure_fin_traitement||'—'}</td>
+                  <td style="padding:8px;text-align:center;color:#1a56a0;font-weight:700">${l.colis_concentration||0}</td>
+                  <td style="padding:8px;text-align:center;color:#7c3aed;font-weight:700">${l.colis_dispersion||0}</td>
+                  <td style="padding:8px;text-align:center;color:#16a34a;font-weight:700">${l.colis_distribution||0}</td>
+                  <td style="padding:8px;text-align:center;font-weight:700">${(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)}</td>
+                </tr>`).join('')}
+              <tr style="background:#1a1f2e;color:white;font-weight:700">
+                <td style="padding:8px">TOTAL</td>
+                <td colspan="3" style="padding:8px"></td>
+                <td style="padding:8px;text-align:center;color:#93c5fd">${(S.liaisonsModal||[]).reduce((s,l)=>s+(l.colis_concentration||0),0)}</td>
+                <td style="padding:8px;text-align:center;color:#c4b5fd">${(S.liaisonsModal||[]).reduce((s,l)=>s+(l.colis_dispersion||0),0)}</td>
+                <td style="padding:8px;text-align:center;color:#86efac">${(S.liaisonsModal||[]).reduce((s,l)=>s+(l.colis_distribution||0),0)}</td>
+                <td style="padding:8px;text-align:center">${(S.liaisonsModal||[]).reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)}</td>
               </tr>
             </tbody>
-          </table>`;
-        }
-
-        // Autres événements (colis, incident, anomalie)
-        const autresEvts = evts.filter(e=>e.type!=='liaison');
-        if(autresEvts.length){
-          html += `<div class="section-title" style="margin-top:12px">📋 Événements</div>`;
-          autresEvts.forEach(e=>{
-            const photos = parsePhotos(e.photo_url);
-            html += `<div class="timeline-item">
-              <div class="timeline-time">${fmtHeure(e.created_at)}</div>
-              <div>
-                <div class="timeline-type" style="color:${COLORS[e.type]||'#333'}">${TYPES[e.type]||'•'} ${e.type}</div>
-                <div class="timeline-texte">${e.texte}</div>
-                ${photos.map(url=>`<img src="${url}" class="evt-photo" style="max-width:200px" />`).join('')}
-              </div>
-            </div>`;
-          });
-        }
-
-        // Pointage
-        const pointages = await sbGet(`pointages?vacation_id=eq.${v.id}&order=created_at.asc`);
-        if(pointages.length){
-          html += `<div class="section-title" style="margin-top:12px">📋 Pointage</div>`;
-          html += `<table class="table-liaisons">
-            <thead><tr>
-              <th style="text-align:left">Agent</th>
-              <th>Statut</th>
-              <th>Début</th>
-              <th>Pause 1</th>
-              <th>Pause 2</th>
-              <th>Fin</th>
-              <th>Durée (h)</th>
-            </tr></thead>
-            <tbody>`;
-          pointages.forEach(p=>{
-            const ag = agents.find(a=>a.id===p.agent_id);
-            const duree = calcDureePointage(p);
-            const statutLabel = p.statut==='present'?'✅ Présent':p.statut==='cp'?'🏖️ CP':'⚠️ Absent';
-            const pause1 = p.heure_debut_pause1?(p.heure_debut_pause1+(p.heure_fin_pause1?' → '+p.heure_fin_pause1:'')):'—';
-            const pause2 = p.heure_debut_pause2?(p.heure_debut_pause2+(p.heure_fin_pause2?' → '+p.heure_fin_pause2:'')):'—';
-            html += `<tr>
-              <td style="font-weight:600">${ag?.prenom||'?'} ${ag?.nom||''}</td>
-              <td style="text-align:center">${statutLabel}</td>
-              <td style="text-align:center">${p.heure_debut||'—'}</td>
-              <td style="text-align:center">${pause1}</td>
-              <td style="text-align:center">${pause2}</td>
-              <td style="text-align:center">${p.heure_fin||'—'}</td>
-              <td style="text-align:center;font-weight:700">${duree||'—'}</td>
-            </tr>`;
-          });
-          html += `</tbody></table>`;
-        }
-
-        if(!evts.length && !liaisons.length && !pointages.length){
-          html += `<div class="empty">Aucun élément enregistré.</div>`;
-        }
-        html += '<hr style="margin:14px 0;border:none;border-top:1px solid #eee">';
-      }
-      html += '</div>';
-    }
-
-    // Tableau récapitulatif global toutes équipes
-    const toutesLiaisons = [];
-    for(const equipe of EQUIPES){
-      const vacsEquipe = vacations.filter(v=>v.equipe===equipe);
-      for(const v of vacsEquipe){
-        const lv = await sbGet(`liaisons?vacation_id=eq.${v.id}&order=created_at.asc`);
-        lv.forEach(l=>toutesLiaisons.push({...l, equipe}));
-      }
-    }
-
-    // Collect all pointages for Excel (always, even without liaisons)
-    const allPointagesGlobal = [];
-    for(const equipe of EQUIPES){
-      const vacsEqG = vacations.filter(v=>v.equipe===equipe);
-      for(const v of vacsEqG){
-        const pts = await sbGet(`pointages?vacation_id=eq.${v.id}&order=created_at.asc`);
-        pts.forEach(p=>{
-          const ag = agents.find(a=>a.id===p.agent_id);
-          allPointagesGlobal.push({
-            ...p, equipe,
-            agentNom: `${ag?.prenom||'?'} ${ag?.nom||''}`,
-            duree: calcDureePointage(p)
-          });
-        });
-      }
-    }
-    window._tousPointages = allPointagesGlobal;
-
-    if(toutesLiaisons.length){
-      html += `<div class="card" id="tableau-global">
-        <div class="card-title">📊 Récapitulatif global — Toutes équipes confondues</div>
-        <table class="table-liaisons">
-          <thead><tr>
-            <th>Équipe</th>
-            <th>Liaison</th>
-            <th>Arrivée</th>
-            <th>Début</th>
-            <th>Fin</th>
-            <th>Durée (h)</th>
-            <th style="color:#93c5fd">Conc.</th>
-            <th style="color:#c4b5fd">Disp.</th>
-            <th style="color:#86efac">Dist.</th>
-            <th>Total</th>
-          </tr></thead>
-          <tbody>
-            ${toutesLiaisons.map((l,i)=>`<tr style="background:${i%2===0?'#f4f6f9':'white'}">
-              <td style="font-weight:700">${l.equipe}</td>
-              <td style="font-weight:700">${l.nom}</td>
-              <td style="text-align:center">${l.heure_arrivee||'—'}</td>
-              <td style="text-align:center">${l.heure_debut_traitement||'—'}</td>
-              <td style="text-align:center">${l.heure_fin_traitement||'—'}</td>
-              <td style="text-align:center;color:#1a56a0;font-weight:700">${l.colis_concentration||0}</td>
-              <td style="text-align:center;color:#7c3aed;font-weight:700">${l.colis_dispersion||0}</td>
-              <td style="text-align:center;color:#16a34a;font-weight:700">${l.colis_distribution||0}</td>
-              <td style="text-align:center;font-weight:700">${(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)}</td>
-            </tr>`).join('')}
-            <tr class="total-row">
-              <td colspan="2">TOTAL GÉNÉRAL</td>
-              <td colspan="4"></td>
-              <td style="text-align:center">${toutesLiaisons.reduce((s,l)=>s+(l.colis_concentration||0),0)}</td>
-              <td style="text-align:center">${toutesLiaisons.reduce((s,l)=>s+(l.colis_dispersion||0),0)}</td>
-              <td style="text-align:center">${toutesLiaisons.reduce((s,l)=>s+(l.colis_distribution||0),0)}</td>
-              <td style="text-align:center">${toutesLiaisons.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>`;
-
-      // Stocker les données pour export Excel
-      window._liaisonsData = toutesLiaisons;
-      window._dateLabel = dateLabel;
-    }
-
-    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
-      <button class="btn-pdf" onclick="window.print()">🖨️ PDF / Imprimer</button>
-      <button class="btn-pdf" style="background:#16a34a" onclick="exporterExcel()">📊 Télécharger Excel</button>
-    </div>`;
-    document.getElementById('content').innerHTML = html;
-  }catch(e){
-    document.getElementById('content').innerHTML = `<div class="card"><div class="empty">❌ Erreur : ${e.message}</div></div>`;
-  }
+          </table>
+        </div>`}
+      `:''}
+      <div class="modal-btns" onclick="event.stopPropagation()">
+        <button class="btn-annuler" style="flex:1" onclick="fermerModal()">Fermer</button>
+        <button class="btn-primary" style="flex:1" onclick="event.stopPropagation();envoyerCRParEmail()">📧 Email</button>
+        <button class="btn-primary" style="flex:1;background:var(--vert)" onclick="event.stopPropagation();imprimerCR()">📄 PDF</button>
+      </div>
+    </div>
+  </div>`;
 }
 
-charger();
+async function chargerLiaisonsModal(){
+  if(!S.compteRenduActuel) return;
+  S.liaisonsModal = await chargerLiaisons(S.compteRenduActuel.vacation.id);
+  render();
+}
 
-function exporterExcel(){
-  const liaisons = window._liaisonsData||[];
-  const pointagesExport = window._tousPointages||[];
-  if(!liaisons.length && !pointagesExport.length){ alert('Aucune donnée à exporter'); return; }
-
-  const equipes = ['Concentration','Soirée','Nuit'];
-  const wb = XLSX.utils.book_new();
-
-  // Feuille globale
-  const rows = [
-    ['Équipe','Liaison','Arrivée','Début traitement','Fin traitement','Durée (h)','Concentration','Dispersion','Distribution','Total colis']
-  ];
-  const boldRows = [0]; // ligne 0 = entêtes en gras
-  let rowIdx = 1;
-
-  equipes.forEach(eq=>{
-    const lEq = liaisons.filter(l=>l.equipe===eq);
-    if(!lEq.length) return;
-    rows.push([`--- ${eq.toUpperCase()} ---`,'','','','','','','','']);
-    boldRows.push(rowIdx); rowIdx++;
-    lEq.forEach(l=>{
-      rows.push([
-        eq, l.nom,
-        l.heure_arrivee||'', l.heure_debut_traitement||'', l.heure_fin_traitement||'',
-        calcDuree(l.heure_debut_traitement,l.heure_fin_traitement)||'',
-        l.colis_concentration||0, l.colis_dispersion||0, l.colis_distribution||0,
-        (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)
-      ]);
-      rowIdx++;
-    });
-    rows.push([
-      `Sous-total ${eq}`,'','','','','',
-      lEq.reduce((s,l)=>s+(l.colis_concentration||0),0),
-      lEq.reduce((s,l)=>s+(l.colis_dispersion||0),0),
-      lEq.reduce((s,l)=>s+(l.colis_distribution||0),0),
-      lEq.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
-    ]);
-    boldRows.push(rowIdx); rowIdx++;
-    rows.push(['','','','','','','','','']);
-    rowIdx++;
+async function envoyerCRParEmail(){
+  const cr = S.compteRenduActuel; if(!cr) return;
+  const agent = S.tousAgents.find(a=>a.id===cr.vacation.agent_id);
+  const parCategorie = {liaison:[],colis:[],incident:[],anomalie:[]};
+  cr.evenements.forEach(e=>{ if(parCategorie[e.type]) parCategorie[e.type].push(e); });
+  const TYPES = {liaison:'🚛',colis:'📦',incident:'⚠️',anomalie:'🔧'};
+  const lienCR = `https://guillaume-prod.github.io/vacation-app/cr.html?id=${cr.vacation.id}`;
+  let contenu = '';
+  contenu += `<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif">`;
+  contenu += `<tr><td style="background:#1a56a0;color:white;padding:12px"><b>👤 ${agent?.prenom||''} ${agent?.nom||''} — ${cr.vacation.equipe||''}</b></td></tr>`;
+  contenu += `<tr><td style="background:#f4f6f9;color:#666;font-size:12px;padding:8px">${fmtDateTime(cr.vacation.date_debut)} → ${fmtDateTime(cr.vacation.date_fin)}</td></tr>`;
+  Object.entries(parCategorie).forEach(([type,liste])=>{
+    if(!liste.length) return;
+    const colors={liaison:'#1a56a0',colis:'#d97706',incident:'#dc2626',anomalie:'#7c3aed'};
+    contenu += `<tr><td style="padding:8px;border-top:2px solid ${colors[type]||'#ccc'}"><b style="color:${colors[type]||'#333'}">${TYPES[type]} ${type.charAt(0).toUpperCase()+type.slice(1)} (${liste.length})</b>`;
+    liste.forEach(e=>{ contenu += `<br>• ${e.texte}`; });
+    contenu += `</td></tr>`;
   });
+  contenu += `<tr><td style="padding:12px;text-align:center"><a href="${lienCR}" style="background:#1a56a0;color:white;padding:10px 20px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block">📋 Voir le CR complet &amp; PDF</a></td></tr>`;
+  contenu += `</table>`;
+  try{
+    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+      date: fmtDateTime(cr.vacation.date_debut),
+      contenu,
+    });
+    toast('✅ CR envoyé par email !','ok');
+  }catch(e){ toast('Erreur envoi email','err'); }
+}
 
-  const totalRow = ['TOTAL GÉNÉRAL','','','','','',
-    liaisons.reduce((s,l)=>s+(l.colis_concentration||0),0),
-    liaisons.reduce((s,l)=>s+(l.colis_dispersion||0),0),
-    liaisons.reduce((s,l)=>s+(l.colis_distribution||0),0),
-    liaisons.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
-  ];
-  rows.push(totalRow);
-  boldRows.push(rowIdx);
+function imprimerCR(){
+  const cr = S.compteRenduActuel; if(!cr) return;
+  const agent = S.tousAgents.find(a=>a.id===cr.vacation.agent_id);
+  const TYPES_LABELS = {liaison:'🚛 Liaison',colis:'📦 Colis',incident:'⚠️ Incident',anomalie:'🔧 Anomalie'};
+  const TYPES_COLORS = {liaison:'#1a56a0',colis:'#d97706',incident:'#dc2626',anomalie:'#7c3aed'};
+  const evtsChrono = [...cr.evenements].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>CR Vacation – ${agent?.prenom} ${agent?.nom}</title>
+    <style>
+      body{font-family:Arial,sans-serif;padding:20px;max-width:800px;margin:0 auto}
+      h1{color:#1a56a0;border-bottom:3px solid #1a56a0;padding-bottom:8px}
+      .meta{color:#666;font-size:13px;margin-bottom:20px}
+      .evt{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee}
+      .evt-time{font-weight:700;color:#1a56a0;min-width:50px;font-size:13px;padding-top:2px}
+      .evt-type{font-weight:700;font-size:12px;margin-bottom:3px}
+      .evt-texte{font-size:13px;color:#333}
+      .empty{color:#999;font-style:italic}
+      .btn{margin-top:20px;padding:12px 24px;background:#1a56a0;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer}
+      @media print{.btn{display:none}}
+    </style>
+  </head><body>
+    <h1>📋 Compte rendu de vacation</h1>
+    <div class="meta">
+      <strong>Agent :</strong> ${agent?.prenom||''} ${agent?.nom||''} — ${cr.vacation.equipe||''}<br>
+      <strong>Période :</strong> ${fmtDateTime(cr.vacation.date_debut)} → ${fmtDateTime(cr.vacation.date_fin)}<br>
+      <strong>Nombre d'événements :</strong> ${evtsChrono.length}
+    </div>
+    ${!evtsChrono.length?'<p class="empty">Aucun élément enregistré.</p>':
+      evtsChrono.map(e=>`
+        <div class="evt">
+          <div class="evt-time">${fmtHeure(e.created_at)}</div>
+          <div>
+            <div class="evt-type" style="color:${TYPES_COLORS[e.type]||'#333'}">${TYPES_LABELS[e.type]||e.type}</div>
+            <div class="evt-texte">${e.texte}</div>
+            ${parsePhotos(e.photo_url).map(url=>`<img src="${url}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block" />`).join('')}
+          </div>
+        </div>`).join('')}
+    <br><button class="btn" onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>
+  </body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:16},{wch:22},{wch:10},{wch:14},{wch:14},{wch:14},{wch:12},{wch:14},{wch:12}];
+// ── ADMIN ───────────────────────────────────────────────────────
+function renderAdmin(){
+  if(!S.agent.est_responsable) return `<div class="card"><p>Accès non autorisé.</p></div>`;
+  return `
+  <div class="admin-tabs">
+    <button class="admin-tab ${S.adminTab==='vacations'?'active':''}" onclick="setAdminTab('vacations')">🎙️ Vacations</button>
+    <button class="admin-tab ${S.adminTab==='agents'?'active':''}" onclick="setAdminTab('agents')">👥 Agents</button>
+    <button class="admin-tab ${S.adminTab==='ajouter'?'active':''}" onclick="setAdminTab('ajouter')">➕ Ajouter</button>
+    <button class="admin-tab ${S.adminTab==='accidents'?'active':''}" onclick="setAdminTab('accidents');chargerAccidents()">🚨 Accidents</button>
+  </div>
+  ${S.adminTab==='vacations'?renderAdminVacations():''}
+  ${S.adminTab==='agents'?renderAdminAgents():''}
+  ${S.adminTab==='ajouter'?renderAdminAjouter():''}
+  ${S.adminTab==='accidents'?renderAdminAccidents():''}`;
+}
 
-  // Appliquer le gras
-  boldRows.forEach(ri=>{
-    for(let ci=0;ci<9;ci++){
-      const addr = XLSX.utils.encode_cell({r:ri,c:ci});
-      if(!ws[addr]) ws[addr]={v:'',t:'s'};
-      if(!ws[addr].s) ws[addr].s={};
-      ws[addr].s.font = {bold:true};
+function renderAdminVacations(){
+  const vacations=S.toutesVacations||[];
+  const filtrees=S.filtreEquipe==='Toutes'?vacations:vacations.filter(v=>v.equipe===S.filtreEquipe);
+  return `
+  <div class="card" style="background:var(--bleu);color:white;cursor:pointer" onclick="envoyerRecapMaintenant()">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-weight:700;font-size:15px">📧 Envoyer le récap maintenant</div>
+        <div style="font-size:12px;opacity:0.8;margin-top:3px">Envoie immédiatement le compte rendu par email</div>
+      </div>
+      <span style="font-size:24px">→</span>
+    </div>
+  </div>
+  <div class="filtre-equipes">
+    ${['Toutes',...EQUIPES].map(e=>`<button class="filtre-btn ${S.filtreEquipe===e?'active':''}" onclick="setFiltreEquipe('${e}')">${e}</button>`).join('')}
+  </div>
+  ${!filtrees.length?`<div class="card"><div class="empty-state"><div class="empty-icon">🎙️</div>Aucun compte rendu pour l'instant.</div></div>`:
+    filtrees.map(v=>{
+      const agent=S.tousAgents.find(a=>a.id===v.agent_id);
+      return `<div class="card" onclick="ouvrirCompteRendu('${v.id}')" style="cursor:pointer">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700;font-size:14px">${agent?.prenom||'?'} ${agent?.nom||''}</div>
+            ${equipeBadge(v.equipe)}
+            <div style="font-size:11px;color:var(--texte-doux);margin-top:4px">${fmtDateTime(v.date_debut)}${v.date_fin?' → '+fmtDateTime(v.date_fin):' · en cours'}</div>
+          </div>
+          <span class="badge ${v.statut}">${v.statut==='terminee'?'✅ Terminée':'🎙️ En cours'}</span>
+        </div>
+      </div>`;
+    }).join('')
+  }`;
+}
+
+async function envoyerRecapMaintenant(){
+  if(!confirm('Envoyer le récapitulatif par email maintenant ?')) return;
+  toast('📧 Ouverture en cours...','ok');
+  window.open('https://guillaume-prod.github.io/vacation-app/recap.html','_blank');
+}
+
+function renderAdminAgents(){
+  return `<div class="card">
+    <div class="card-title">Agents</div>
+    <div class="filtre-equipes">
+      ${['Toutes',...EQUIPES].map(e=>`<button class="filtre-btn ${S.filtreEquipe===e?'active':''}" onclick="setFiltreEquipe('${e}')">${e}</button>`).join('')}
+    </div>
+    ${S.tousAgents.filter(a=>S.filtreEquipe==='Toutes'||a.equipe===S.filtreEquipe).map(a=>`
+    <div class="agent-item" onclick="ouvrirEditAgent('${a.id}')">
+      <div>
+        <div class="agent-name">${a.prenom} ${a.nom}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+          ${equipeBadge(a.equipe)}<span class="agent-code">Code : ${a.code_acces}</span>
+        </div>
+      </div>
+      <span style="font-size:16px;color:var(--texte-doux)">›</span>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderAdminAjouter(){
+  return `<div class="card">
+    <div class="card-title">Ajouter un agent</div>
+    <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" id="new-prenom" type="text" /></div>
+    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="new-nom" type="text" /></div>
+    <div class="form-group"><label class="form-label">Équipe</label>
+      <select class="form-input" id="new-equipe">
+        <option value="">-- Choisir --</option>
+        ${EQUIPES.map(e=>`<option value="${e}">${e}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Code d'accès</label><input class="form-input" id="new-code" type="text" /></div>
+    <button class="btn-primary" onclick="ajouterAgent()">Ajouter</button>
+  </div>`;
+}
+
+function renderModalEditAgent(){
+  const a=S.tousAgents.find(x=>x.id===S.editAgentId); if(!a) return '';
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">✏️ ${a.prenom} ${a.nom}</div>
+      <div class="form-group"><label class="form-label">Équipe</label>
+        <select class="form-input" id="edit-equipe">
+          <option value="">-- Sans équipe --</option>
+          ${EQUIPES.map(e=>`<option value="${e}" ${a.equipe===e?'selected':''}>${e}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Code d'accès</label><input class="form-input" type="text" id="edit-code" value="${a.code_acces}" /></div>
+      <div class="form-group">
+        <label class="form-label">Rôle</label>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1.5px solid var(--gris-bord);border-radius:10px">
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="edit-chef" ${a.est_chef_equipe?'checked':''} style="width:18px;height:18px" />
+            Chef d'équipe (accès au pointage)
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="edit-admin" ${a.est_responsable?'checked':''} style="width:18px;height:18px" />
+            Responsable (accès complet à l'admin)
+          </label>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+        <button class="btn-primary" style="flex:1" onclick="sauvegarderAgent('${a.id}')">Enregistrer</button>
+      </div>
+      ${a.id!==S.agent.id?`<div style="margin-top:12px;text-align:center"><button class="lien-danger" onclick="supprimerAgent('${a.id}')">🗑️ Supprimer cet agent</button></div>`:''}
+    </div>
+  </div>`;
+}
+
+async function ajouterAgent(){
+  const prenom=document.getElementById('new-prenom')?.value.trim();
+  const nom=document.getElementById('new-nom')?.value.trim();
+  const equipe=document.getElementById('new-equipe')?.value||null;
+  const code=document.getElementById('new-code')?.value.trim();
+  if(!prenom||!nom||!code) return toast('Remplis tous les champs','err');
+  try{
+    await db.post('agents',{prenom,nom,equipe:equipe||null,code_acces:code,est_responsable:false});
+    toast(`✅ ${prenom} ${nom} ajouté !`,'ok');
+    document.getElementById('new-prenom').value='';document.getElementById('new-nom').value='';document.getElementById('new-code').value='';
+    await chargerAgents(); render();
+  }catch(e){ toast('Erreur ajout','err'); }
+}
+
+function ouvrirEditAgent(id){ S.editAgentId=id; S.modal='edit-agent'; render(); }
+async function sauvegarderAgent(id){
+  const equipe=document.getElementById('edit-equipe')?.value||null;
+  const code=document.getElementById('edit-code')?.value.trim();
+  const admin=document.getElementById('edit-admin')?.checked||false;
+  const chef=document.getElementById('edit-chef')?.checked||false;
+  if(!code) return toast('Code requis','err');
+  try{
+    await db.patch('agents',`id=eq.${id}`,{equipe:equipe||null,code_acces:code,est_responsable:admin,est_chef_equipe:chef});
+    toast('✅ Agent mis à jour !','ok'); fermerModal();
+    await chargerAgents(); render();
+  }catch(e){ toast('Erreur','err'); }
+}
+async function supprimerAgent(id){
+  if(!confirm('Supprimer cet agent ?')) return;
+  try{
+    await db.delete('agents',`id=eq.${id}`);
+    toast('Agent supprimé','ok'); fermerModal();
+    await chargerAgents(); render();
+  }catch(e){ toast('Erreur suppression','err'); }
+}
+
+// ── CODE PERSONNEL ──────────────────────────────────────────────
+function ouvrirChangerCode(){ S.modal='changer-code'; render(); }
+function renderModalChangerCode(){
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">🔑 Changer mon code d'accès</div>
+      <div class="form-group"><label class="form-label">Nouveau code</label><input class="form-input" type="password" id="nouveau-code" /></div>
+      <div class="form-group"><label class="form-label">Confirmer</label><input class="form-input" type="password" id="confirm-code" /></div>
+      <div class="modal-btns">
+        <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+        <button class="btn-primary" style="flex:1" onclick="changerCode()">Enregistrer</button>
+      </div>
+    </div>
+  </div>`;
+}
+async function changerCode(){
+  const n=document.getElementById('nouveau-code')?.value.trim();
+  const c=document.getElementById('confirm-code')?.value.trim();
+  if(!n) return toast('Saisis un nouveau code','err');
+  if(n!==c) return toast('Les codes ne correspondent pas','err');
+  try{
+    await db.patch('agents',`id=eq.${S.agent.id}`,{code_acces:n});
+    S.agent.code_acces=n; toast('✅ Code modifié !','ok'); fermerModal();
+  }catch(e){ toast('Erreur','err'); }
+}
+
+// ── NAV / MISC ──────────────────────────────────────────────────
+function setAdminTab(t){ S.adminTab=t; render(); }
+function setFiltreEquipe(e){ S.filtreEquipe=e; render(); }
+function fermerModal(){ S.modal=null; render(); }
+async function changerVue(v){
+  S.vue=v; S.loading=true; render();
+  await chargerTout();
+  S.loading=false; render();
+}
+
+async function connexion(){
+  const prenom=document.getElementById('login-prenom')?.value.trim();
+  const code=document.getElementById('login-code')?.value.trim();
+  if(!prenom||!code) return;
+  try{
+    const res=await db.get('agents',`prenom=ilike.${encodeURIComponent(prenom)}&code_acces=eq.${encodeURIComponent(code)}&select=*`);
+    if(!res.length){ document.getElementById('login-error').style.display='block'; return; }
+    S.agent=res[0];
+    // Sauvegarder la session
+    localStorage.setItem('vacation_session', JSON.stringify({id:res[0].id, prenom:res[0].prenom, code:code}));
+    S.loading=true; render();
+    await chargerTout();
+    S.loading=false;
+    if(S.vacationDirectId){
+      await ouvrirCompteRendu(S.vacationDirectId);
+      S.vacationDirectId=null;
     }
-  });
+    render();
+  }catch(e){ toast('Erreur de connexion','err'); }
+}
+function deconnexion(){
+  localStorage.removeItem('vacation_session');
+  S={...S, agent:null, vue:'vacation', vacationActive:null, evenementsVacation:[], modal:null};
+  render();
+}
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Récap global');
+function renderLogin(){
+  return `<div class="login-screen">
+    <div class="login-logo">🎙️</div>
+    <div class="login-title">Compte rendu de vacation</div>
+    <div class="login-sub">La Poste – Mulhouse</div>
+    <div class="login-card">
+      <div class="form-group"><label class="form-label">Ton prénom</label><input class="form-input" id="login-prenom" type="text" placeholder="Ex : Marie" autocomplete="off" /></div>
+      <div class="form-group"><label class="form-label">Code d'accès</label><input class="form-input" id="login-code" type="password" placeholder="••••" autocomplete="off" /></div>
+      <div id="login-error" style="color:var(--rouge);font-size:13px;margin-bottom:10px;display:none">❌ Prénom ou code incorrect.</div>
+      <button class="btn-primary" onclick="connexion()">Se connecter</button>
+    </div>
+  </div>`;
+}
 
-  // Feuilles par équipe
-  equipes.forEach(eq=>{
-    const lEq = liaisons.filter(l=>l.equipe===eq);
-    if(!lEq.length) return;
-    const rowsEq = [
-      ['Liaison','Arrivée','Début traitement','Fin traitement','Durée (h)','Concentration','Dispersion','Distribution','Total'],
-      ...lEq.map(l=>[
-        l.nom, l.heure_arrivee||'', l.heure_debut_traitement||'', l.heure_fin_traitement||'',
-        calcDuree(l.heure_debut_traitement,l.heure_fin_traitement)||'',
-        l.colis_concentration||0, l.colis_dispersion||0, l.colis_distribution||0,
-        (l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)
-      ]),
-      ['TOTAL','','','',
-        lEq.reduce((s,l)=>s+(l.colis_concentration||0),0),
-        lEq.reduce((s,l)=>s+(l.colis_dispersion||0),0),
-        lEq.reduce((s,l)=>s+(l.colis_distribution||0),0),
-        lEq.reduce((s,l)=>s+(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0),0)
-      ]
-    ];
-    const wsEq = XLSX.utils.aoa_to_sheet(rowsEq);
-    wsEq['!cols'] = [{wch:22},{wch:10},{wch:14},{wch:14},{wch:14},{wch:12},{wch:14},{wch:12}];
-    // Gras sur entête et total
-    [0, rowsEq.length-1].forEach(ri=>{
-      for(let ci=0;ci<8;ci++){
-        const addr = XLSX.utils.encode_cell({r:ri,c:ci});
-        if(!wsEq[addr]) wsEq[addr]={v:'',t:'s'};
-        if(!wsEq[addr].s) wsEq[addr].s={};
-        wsEq[addr].s.font = {bold:true};
+render();
+
+// ── POINTAGE ────────────────────────────────────────────────────
+function renderPointageAdmin(){
+  // Vue admin : tous les pointages en cours toutes équipes
+  const equipes = ['Concentration','Soirée','Nuit'];
+  const icons = {Concentration:'☀️', Soirée:'🌆', Nuit:'🌙'};
+  return `<div class="card">
+    <div class="card-title">📋 Pointage — Vue globale</div>
+    <div class="info-banner">👁️ Vue globale de tous les pointages en cours. Démarre une vacation pour pointer ton équipe.</div>
+    ${equipes.map(eq=>{
+      // Trouver vacation en cours pour cette équipe
+      const vacEq = (S.toutesVacations||[]).find(v=>v.equipe===eq&&v.statut==='en_cours');
+      if(!vacEq) return `<div style="padding:10px 0;border-bottom:1px solid var(--gris)">
+        <div style="font-weight:700">${icons[eq]} ${eq}</div>
+        <div style="font-size:12px;color:var(--texte-doux)">Aucune vacation en cours</div>
+      </div>`;
+      const pts = (S.tousPointages||[]).filter(p=>p.vacation_id===vacEq.id);
+      const presents = pts.filter(p=>p.statut==='present');
+      const absents = pts.filter(p=>p.statut!=='present');
+      return `<div style="padding:10px 0;border-bottom:1px solid var(--gris)">
+        <div style="font-weight:700;margin-bottom:6px">${icons[eq]} ${eq}</div>
+        ${!pts.length?'<div style="font-size:12px;color:var(--texte-doux)">Pointage non encore commencé</div>':''}
+        ${presents.map(p=>{
+          const a = S.tousAgents.find(x=>x.id===p.agent_id);
+          return `<div style="font-size:13px;display:flex;justify-content:space-between;padding:3px 0">
+            <span>✅ ${a?.prenom||'?'} ${a?.nom||''}</span>
+            <span style="color:var(--texte-doux);font-size:11px">${p.heure_debut||''}${p.heure_fin?' → '+p.heure_fin:''}</span>
+          </div>`;
+        }).join('')}
+        ${absents.map(p=>{
+          const a = S.tousAgents.find(x=>x.id===p.agent_id);
+          return `<div style="font-size:13px;display:flex;justify-content:space-between;padding:3px 0">
+            <span>${p.statut==='cp'?'🏖️':'⚠️'} ${a?.prenom||'?'} ${a?.nom||''}</span>
+            <span style="font-size:11px;color:var(--texte-doux)">${p.statut==='cp'?'CP':'Absent'}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+async function chargerPointage(){
+  try{
+    if(S.agent.equipe){
+      // Charger agents de la même équipe (hors responsables)
+      S.pointageEquipe = await db.get('agents', `equipe=eq.${encodeURIComponent(S.agent.equipe)}&order=nom.asc`);
+      // Chercher pointage en cours pour la vacation active
+      if(S.vacationActive){
+        const pts = await db.get('pointages', `vacation_id=eq.${S.vacationActive.id}&order=created_at.asc`);
+        S.pointageActif = pts.length ? pts : null;
       }
-    });
-    XLSX.utils.book_append_sheet(wb, wsEq, eq.substring(0,31));
-  });
+    }
+    // Pour admin : charger tous les pointages des vacations en cours
+    if(S.agent.est_responsable){
+      const vacsEnCours = (S.toutesVacations||[]).filter(v=>v.statut==='en_cours');
+      S.tousPointages = [];
+      for(const v of vacsEnCours){
+        const pts = await db.get('pointages',`vacation_id=eq.${v.id}&order=created_at.asc`);
+        S.tousPointages = [...S.tousPointages, ...pts];
+      }
+    }
+  }catch(e){ console.error(e); }
+}
 
-  // Feuille pointage global
-  const tousPointages = window._tousPointages||[];
-  if(tousPointages.length){
-    const rowsPt = [
-      ['Équipe','Agent','Statut','Heure début','Pause 1 début','Pause 1 fin','Pause 2 début','Pause 2 fin','Heure fin','Durée (h)']
-    ];
-    tousPointages.forEach(p=>{
-      rowsPt.push([
-        p.equipe||'', p.agentNom||'',
-        p.statut==='present'?'Présent':p.statut==='cp'?'CP':'Absent',
-        p.heure_debut||'', p.heure_debut_pause1||'', p.heure_fin_pause1||'',
-        p.heure_debut_pause2||'', p.heure_fin_pause2||'',
-        p.heure_fin||'', p.duree||''
-      ]);
-    });
-    const wsPt = XLSX.utils.aoa_to_sheet(rowsPt);
-    wsPt['!cols'] = [{wch:15},{wch:22},{wch:10},{wch:12},{wch:14},{wch:12},{wch:14},{wch:12},{wch:12},{wch:10}];
-    XLSX.utils.book_append_sheet(wb, wsPt, 'Pointage');
+function renderPointage(){
+  if(!S.agent.equipe && !S.agent.est_responsable && !S.agent.est_chef_equipe) return `<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div>Aucune équipe assignée. Contacte ton responsable.</div></div>`;
+  if(!S.vacationActive && !S.agent.est_responsable) return `<div class="card">
+    <div class="card-title">📋 Pointage</div>
+    <div class="info-banner">⚠️ Démarre d'abord une vacation dans l'onglet 🎙️ Vacation pour pouvoir faire le pointage.</div>
+  </div>`;
+  // Admin sans vacation active : voir tous les pointages du jour
+  if(!S.vacationActive && S.agent.est_responsable) return renderPointageAdmin();
+
+  // Si pointage déjà commencé
+  if(S.pointageActif && S.pointageActif.length){
+    return renderPointageEnCours();
   }
+  // Sinon afficher sélection
+  return renderPointageSelection();
+}
 
-  const date = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
-  XLSX.writeFile(wb, `liaisons-${date}.xlsx`);
+function renderPointageSelection(){
+  const agents = S.pointageEquipe||[];
+  return `<div class="card">
+    <div class="card-title">📋 Pointage — ${S.agent.equipe}</div>
+    <div class="info-banner">✅ Sélectionne les agents présents. Les absents/CP peuvent être marqués directement.</div>
+    ${!agents.length?'<div class="empty-state">Aucun agent dans cette équipe.</div>':
+    agents.map(a=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gris)">
+        <div style="font-weight:600;font-size:14px">${a.prenom} ${a.nom}</div>
+        <div style="display:flex;gap:6px">
+          <button onclick="setStatutPointage('${a.id}','present')" style="padding:6px 12px;border-radius:8px;border:2px solid ${(S.pointageSelection||{})[a.id]==='present'?'var(--vert)':'var(--gris-bord)'};background:${(S.pointageSelection||{})[a.id]==='present'?'var(--vert-pale)':'white'};color:${(S.pointageSelection||{})[a.id]==='present'?'var(--vert)':'var(--texte-doux)'};font-weight:600;font-size:12px;cursor:pointer">✅ Présent</button>
+          <button onclick="setStatutPointage('${a.id}','absent')" style="padding:6px 12px;border-radius:8px;border:2px solid ${(S.pointageSelection||{})[a.id]==='absent'?'var(--orange)':'var(--gris-bord)'};background:${(S.pointageSelection||{})[a.id]==='absent'?'var(--orange-pale)':'white'};color:${(S.pointageSelection||{})[a.id]==='absent'?'var(--orange)':'var(--texte-doux)'};font-weight:600;font-size:12px;cursor:pointer">⚠️ Absent</button>
+          <button onclick="setStatutPointage('${a.id}','cp')" style="padding:6px 12px;border-radius:8px;border:2px solid ${(S.pointageSelection||{})[a.id]==='cp'?'var(--bleu)':'var(--gris-bord)'};background:${(S.pointageSelection||{})[a.id]==='cp'?'var(--bleu-clair)':'white'};color:${(S.pointageSelection||{})[a.id]==='cp'?'var(--bleu)':'var(--texte-doux)'};font-weight:600;font-size:12px;cursor:pointer">🏖️ CP</button>
+        </div>
+      </div>`).join('')}
+    <div class="form-group" style="margin-top:14px">
+      <label class="form-label">Heure de prise de poste</label>
+      <input class="form-input" type="time" id="heure-debut-poste" value="${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}" />
+    </div>
+    <button class="btn-primary" onclick="validerPointageDebut()" style="margin-top:8px">✅ Valider le pointage de début</button>
+  </div>`;
+}
+
+function setStatutPointage(agentId, statut){
+  if(!S.pointageSelection) S.pointageSelection={};
+  S.pointageSelection[agentId] = statut;
+  render();
+}
+
+async function validerPointageDebut(){
+  const agents = S.pointageEquipe||[];
+  const heure = document.getElementById('heure-debut-poste')?.value;
+  if(!heure) return toast("Indique l'heure de début",'err');
+  const sel = S.pointageSelection||{};
+  // Par défaut tous présents si pas sélectionné
+  const toSave = agents.map(a=>({
+    vacation_id: S.vacationActive.id,
+    agent_id: a.id,
+    equipe: S.agent.equipe,
+    statut: sel[a.id]||'present',
+    heure_debut: sel[a.id]==='present'||(sel[a.id]===undefined) ? heure : null,
+  }));
+  try{
+    for(const p of toSave) await db.post('pointages', p);
+    toast('✅ Pointage de début enregistré !','ok');
+    S.pointageSelection={};
+    await chargerPointage();
+    render();
+  }catch(e){ toast('Erreur: '+e.message,'err'); }
+}
+
+function renderPointageEnCours(){
+  const pts = S.pointageActif||[];
+  const presents = pts.filter(p=>p.statut==='present');
+  const absents = pts.filter(p=>p.statut!=='present');
+  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+
+  return `<div class="card">
+    <div class="card-title">📋 Pointage en cours — ${S.agent.equipe}</div>
+
+    ${presents.length?`
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--vert);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">✅ Présents (${presents.length})</div>
+      ${presents.map(p=>{
+        const agent = S.pointageEquipe.find(a=>a.id===p.agent_id);
+        return `<div style="padding:10px 0;border-bottom:1px solid var(--gris)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:600">${agent?.prenom||'?'} ${agent?.nom||''}</div>
+            <div style="font-size:11px;color:var(--texte-doux)">Arrivée : ${p.heure_debut||'—'}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${!p.heure_debut_pause1?`<button onclick="enregistrerHeure('${p.id}','heure_debut_pause1','${now}')" style="padding:5px 10px;border-radius:6px;border:1.5px solid var(--orange);background:var(--orange-pale);color:var(--orange);font-size:11px;font-weight:600;cursor:pointer">☕ Début pause 1</button>`:''}
+            ${p.heure_debut_pause1&&!p.heure_fin_pause1?`<button onclick="enregistrerHeure('${p.id}','heure_fin_pause1','${now}')" style="padding:5px 10px;border-radius:6px;border:1.5px solid var(--vert);background:var(--vert-pale);color:var(--vert);font-size:11px;font-weight:600;cursor:pointer">▶️ Fin pause 1</button>`:''}
+            ${p.heure_fin_pause1&&!p.heure_debut_pause2?`<button onclick="enregistrerHeure('${p.id}','heure_debut_pause2','${now}')" style="padding:5px 10px;border-radius:6px;border:1.5px solid var(--orange);background:var(--orange-pale);color:var(--orange);font-size:11px;font-weight:600;cursor:pointer">☕ Début pause 2</button>`:''}
+            ${p.heure_debut_pause2&&!p.heure_fin_pause2?`<button onclick="enregistrerHeure('${p.id}','heure_fin_pause2','${now}')" style="padding:5px 10px;border-radius:6px;border:1.5px solid var(--vert);background:var(--vert-pale);color:var(--vert);font-size:11px;font-weight:600;cursor:pointer">▶️ Fin pause 2</button>`:''}
+            ${!p.heure_fin?`<button onclick="enregistrerHeure('${p.id}','heure_fin','${now}')" style="padding:5px 10px;border-radius:6px;border:1.5px solid var(--rouge);background:var(--rouge-pale);color:var(--rouge);font-size:11px;font-weight:600;cursor:pointer">🏁 Fin vacation</button>`:`<span style="font-size:11px;color:var(--texte-doux)">🏁 Fin: ${p.heure_fin}</span>`}
+          </div>
+          ${p.heure_debut_pause1?`<div style="font-size:11px;color:var(--texte-doux);margin-top:4px">
+            ${p.heure_debut_pause1?'☕P1: '+p.heure_debut_pause1:''} ${p.heure_fin_pause1?'→ '+p.heure_fin_pause1:''}
+            ${p.heure_debut_pause2?' | ☕P2: '+p.heure_debut_pause2:''} ${p.heure_fin_pause2?'→ '+p.heure_fin_pause2:''}
+          </div>`:''}
+        </div>`;
+      }).join('')}
+    </div>`:''}
+
+    ${absents.length?`
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--texte-doux);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Absents / CP (${absents.length})</div>
+      ${absents.map(p=>{
+        const agent = S.pointageEquipe.find(a=>a.id===p.agent_id);
+        const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        return `<div style="padding:10px 0;border-bottom:1px solid var(--gris)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:600">${agent?.prenom||'?'} ${agent?.nom||''}</span>
+            <span class="badge ${p.statut==='cp'?'approuve':'en_attente'}">${p.statut==='cp'?'🏖️ CP':'⚠️ Absent'}</span>
+          </div>
+          <button onclick="marquerPresent('${p.id}','${now}')" style="padding:5px 12px;border-radius:8px;border:1.5px solid var(--vert);background:var(--vert-pale);color:var(--vert);font-size:11px;font-weight:600;cursor:pointer">✅ Arrivée en retard</button>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+
+    <div style="margin-top:16px">
+      <button class="btn-primary" style="background:var(--vert)" onclick="finVacationTous()">🏁 Fin de vacation pour tous les présents</button>
+    </div>
+  </div>`;
+}
+
+async function marquerPresent(pointageId, heure){
+  try{
+    await db.patch('pointages', `id=eq.${pointageId}`, {statut:'present', heure_debut:heure});
+    toast('✅ Arrivée en retard enregistrée !','ok');
+    await chargerPointage();
+    render();
+  }catch(e){ toast('Erreur','err'); }
+}
+
+async function enregistrerHeure(pointageId, champ, heure){
+  try{
+    await db.patch('pointages', `id=eq.${pointageId}`, {[champ]: heure});
+    toast('✅ Heure enregistrée !','ok');
+    await chargerPointage();
+    render();
+  }catch(e){ toast('Erreur','err'); }
+}
+
+async function finVacationTous(){
+  const pts = (S.pointageActif||[]).filter(p=>p.statut==='present'&&!p.heure_fin);
+  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  try{
+    for(const p of pts) await db.patch('pointages',`id=eq.${p.id}`,{heure_fin:now});
+    toast('✅ Fin de vacation enregistrée pour tous !','ok');
+    await chargerPointage();
+    render();
+  }catch(e){ toast('Erreur','err'); }
+}
+
+// ── LIAISONS STRUCTURÉES ────────────────────────────────────────
+function renderModalLiaison(){
+  const l = S.liaison||{};
+  const equipe = S.agent?.equipe||'';
+  const listeLiaisons = LIAISONS_PAR_EQUIPE[equipe]||[];
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title" style="color:#1a56a0">🚛 Saisie liaison</div>
+
+      <div class="form-group">
+        <label class="form-label">Nom de la liaison</label>
+        <select class="form-input" id="l-nom" onchange="S.liaison.nom=this.value;if(this.value==='Autre')S.liaison.nomAutre='';render()">
+          <option value="">-- Choisir --</option>
+          ${listeLiaisons.map(n=>`<option value="${n}" ${l.nom===n?'selected':''}>${n}</option>`).join('')}
+          <option value="Autre" ${l.nom==='Autre'?'selected':''}>Autre (saisir manuellement)</option>
+        </select>
+        ${l.nom==='Autre'?`<input class="form-input" type="text" id="l-nom-autre" placeholder="Nom de la liaison..." style="margin-top:8px" value="${l.nomAutre||''}" oninput="S.liaison.nomAutre=this.value" />`:''}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="form-group">
+          <label class="form-label">Arrivée</label>
+          <input class="form-input" type="time" id="l-arrivee" value="${l.arrivee||''}" oninput="S.liaison.arrivee=this.value" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Début trait.</label>
+          <input class="form-input" type="time" id="l-debut" value="${l.debut||''}" oninput="S.liaison.debut=this.value" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fin trait.</label>
+          <input class="form-input" type="time" id="l-fin" value="${l.fin||''}" oninput="S.liaison.fin=this.value" />
+        </div>
+      </div>
+
+      <div class="card-title" style="margin-top:4px">Nombre de colis</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="form-group">
+          <label class="form-label" style="color:#1a56a0">Concentration</label>
+          <input class="form-input" type="number" id="l-conc" min="0" placeholder="0" value="${l.concentration||''}" oninput="S.liaison.concentration=parseInt(this.value)||0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="color:#7c3aed">Dispersion</label>
+          <input class="form-input" type="number" id="l-disp" min="0" placeholder="0" value="${l.dispersion||''}" oninput="S.liaison.dispersion=parseInt(this.value)||0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="color:#16a34a">Distribution</label>
+          <input class="form-input" type="number" id="l-dist" min="0" placeholder="0" value="${l.distribution||''}" oninput="S.liaison.distribution=parseInt(this.value)||0" />
+        </div>
+      </div>
+
+      ${(l.concentration||0)+(l.dispersion||0)+(l.distribution||0)>0?`
+      <div style="background:#f4f6f9;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px">
+        <strong>Total colis : ${(l.concentration||0)+(l.dispersion||0)+(l.distribution||0)}</strong>
+      </div>`:''}
+
+      <div class="modal-btns">
+        <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+        <button class="btn-primary" style="flex:1;background:#1a56a0" onclick="validerLiaison()">✅ Enregistrer</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function validerLiaison(){
+  const l = S.liaison||{};
+  const nom = l.nom==='Autre' ? (l.nomAutre||'').trim() : l.nom;
+  if(!nom) return toast('Choisis ou saisis le nom de la liaison','err');
+  if(!l.arrivee) return toast("Indique l'heure d'arrivée",'err');
+
+  const total = (l.concentration||0)+(l.dispersion||0)+(l.distribution||0);
+  // Résumé texte pour le CR
+  const texte = `${nom} | Arrivée: ${l.arrivee}${l.debut?' | Début: '+l.debut:''}${l.fin?' | Fin: '+l.fin:''} | Colis: ${total} (Conc: ${l.concentration||0} / Disp: ${l.dispersion||0} / Dist: ${l.distribution||0})`;
+
+  try{
+    // Enregistrer dans evenements_vacation pour le CR
+    await db.post('evenements_vacation',{
+      vacation_id: S.vacationActive.id,
+      type: 'liaison',
+      texte,
+      photo_url: null,
+    });
+    // Enregistrer dans liaisons pour l'extraction structurée
+    await db.post('liaisons',{
+      vacation_id: S.vacationActive.id,
+      agent_id: S.agent.id,
+      nom,
+      heure_arrivee: l.arrivee||null,
+      heure_debut_traitement: l.debut||null,
+      heure_fin_traitement: l.fin||null,
+      colis_concentration: l.concentration||0,
+      colis_dispersion: l.dispersion||0,
+      colis_distribution: l.distribution||0,
+    });
+    toast('✅ Liaison enregistrée !','ok');
+    S.liaison={};
+    fermerModal();
+    await chargerVacationEnCours();
+    render();
+  }catch(e){ toast('Erreur: '+e.message,'err'); }
+}
+
+// Charger liaisons pour une vacation
+async function chargerLiaisons(vacationId){
+  try{ return await db.get('liaisons',`vacation_id=eq.${vacationId}&order=created_at.asc`); }
+  catch(e){ return []; }
+}
+
+// ── ADMIN ACCIDENTS ─────────────────────────────────────────────
+async function chargerAccidents(){
+  try{ S.tousAccidents=await db.get('accidents','order=created_at.desc&limit=50'); }
+  catch(e){ S.tousAccidents=[]; }
+  render();
+}
+
+function renderAdminAccidents(){
+  const accidents=S.tousAccidents||[];
+  if(!accidents.length) return `<div class="card"><div class="empty-state"><div class="empty-icon">✅</div>Aucun accident déclaré.</div></div>`;
+  return accidents.map(a=>{
+    const agent=S.tousAgents.find(x=>x.id===a.agent_id);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-weight:700;font-size:15px;color:var(--rouge)">🚨 Accident</div>
+          <div style="font-size:13px;font-weight:600">${agent?.prenom||'?'} ${agent?.nom||''}</div>
+          <div style="font-size:11px;color:var(--texte-doux)">${new Date(a.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        ${equipeBadge(agent?.equipe)}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+        ${a.personne?`<div><strong>👤 Personne accidentée :</strong> ${a.personne}</div>`:''}
+        <div><strong>📍 Lieu :</strong> ${a.lieu}${a.lieu_precision?' — '+a.lieu_precision:''}</div>
+        <div><strong>📝 Comment :</strong> ${a.comment}</div>
+        <div><strong>🦵 Partie du corps :</strong> ${a.partie_corps}${a.partie_corps_precision?' — '+a.partie_corps_precision:''}</div>
+        <div><strong>🩹 Blessure :</strong> ${a.type_blessure}</div>
+        <div><strong>🚑 SST :</strong> ${a.pris_en_charge_sst?'✅ Oui':'❌ Non'} &nbsp; <strong>🏥 Hôpital :</strong> ${a.transporte_hopital?'✅ Oui':'❌ Non'}</div>
+        <div><strong>👁️ Témoins :</strong> ${a.temoins?'✅ Oui'+(a.temoins_noms?' — '+a.temoins_noms:''):'❌ Non'}</div>
+        ${a.remarques?`<div><strong>💬 Remarques :</strong> ${a.remarques}</div>`:''}
+      </div>
+      ${renderPhotos(a.photo_url)}
+    </div>`;
+  }).join('');
+}
+
+// ── ACCIDENT ────────────────────────────────────────────────────
+const LIEUX_DEPOT = ['Dans camion','Zone déchargement','Bras 1','Bras 2','Bras 3','Bras 4','Bras 5','Bras 6','Bras 7','Bras 8','Bras 9','Zone chargement'];
+const PARTIES_CORPS = ['Tête','Cou','Épaule droite','Épaule gauche','Bras droit','Bras gauche','Coude droit','Coude gauche','Poignet droit','Poignet gauche','Main droite','Main gauche','Dos','Poitrine','Abdomen','Hanche droite','Hanche gauche','Genou droit','Genou gauche','Cheville droite','Cheville gauche','Pied droit','Pied gauche'];
+const TYPES_BLESSURE = ['Plaie ouverte','Choc / Contusion','Entorse / Foulure','Fracture','Brûlure','Coupure','Écrasement','Autre'];
+
+function ouvrirAccident(){ S.modal='accident'; S.accident={}; S.evtPhotos=[]; render(); }
+
+function renderModalAccident(){
+  const a = S.accident||{};
+  return `<div class="modal-overlay" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title" style="color:var(--rouge)">🚨 Déclaration d'accident</div>
+
+      <div style="background:#fff0f0;border-radius:12px;padding:14px;margin-bottom:16px;border:2px solid #dc262633">
+        <div style="font-size:12px;font-weight:700;color:var(--rouge);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">📞 Appels d'urgence</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <a href="tel:15" style="display:flex;flex-direction:column;align-items:center;padding:12px 6px;background:white;color:var(--rouge);border:2px solid var(--rouge);border-radius:10px;text-decoration:none;font-weight:700;gap:3px">
+            <span style="font-size:20px">🚑</span>
+            <span style="font-size:18px">15</span>
+            <span style="font-size:10px">SAMU</span>
+          </a>
+          <a href="tel:17" style="display:flex;flex-direction:column;align-items:center;padding:12px 6px;background:#1a56a0;color:white;border-radius:10px;text-decoration:none;font-weight:700;gap:3px">
+            <span style="font-size:20px">👮</span>
+            <span style="font-size:18px">17</span>
+            <span style="font-size:10px">POLICE</span>
+          </a>
+          <a href="tel:18" style="display:flex;flex-direction:column;align-items:center;padding:12px 6px;background:var(--rouge);color:white;border-radius:10px;text-decoration:none;font-weight:700;gap:3px">
+            <span style="font-size:20px">🚒</span>
+            <span style="font-size:18px">18</span>
+            <span style="font-size:10px">POMPIERS</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nom et prénom de la personne accidentée</label>
+        <input class="form-input" type="text" id="acc-personne" placeholder="Ex : Marie DUPONT" value="${a.personne||''}" oninput="S.accident.personne=this.value" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Témoins</label>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1.5px solid var(--gris-bord);border-radius:10px;margin-bottom:8px">
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="acc-temoins" ${a.temoins?'checked':''} onchange="S.accident.temoins=this.checked;render()" style="width:18px;height:18px" />
+            Il y a eu des témoins
+          </label>
+        </div>
+        ${a.temoins?`<textarea class="form-input" id="acc-temoins-noms" rows="2" placeholder="Nom et prénom des témoins..." oninput="S.accident.temoins_noms=this.value">${a.temoins_noms||''}</textarea>`:''}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Lieu dans le dépôt</label>
+        <select class="form-input" id="acc-lieu" onchange="S.accident.lieu=this.value;render()">
+          <option value="">-- Choisir un lieu --</option>
+          ${LIEUX_DEPOT.map(l=>`<option value="${l}" ${a.lieu===l?'selected':''}>${l}</option>`).join('')}
+          <option value="Autre" ${a.lieu==='Autre'?'selected':''}>Autre (préciser)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Précision sur le lieu</label>
+        <input class="form-input" type="text" id="acc-lieu-precision" placeholder="Ex : côté gauche du quai 3..." value="${a.lieu_precision||''}" oninput="S.accident.lieu_precision=this.value" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Comment c'est arrivé</label>
+        <textarea class="form-input" id="acc-comment" rows="3" placeholder="Décris les circonstances..." oninput="S.accident.comment=this.value">${a.comment||''}</textarea>
+        <button class="btn-mic" style="margin-top:6px" onclick="demarrerEcoute('acc-comment')">🎙️ Dicter</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Partie du corps touchée</label>
+        <select class="form-input" id="acc-corps" onchange="S.accident.partie_corps=this.value">
+          <option value="">-- Choisir --</option>
+          ${PARTIES_CORPS.map(p=>`<option value="${p}" ${a.partie_corps===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Précision partie du corps</label>
+        <input class="form-input" type="text" id="acc-corps-precision" placeholder="Ex : face interne du genou..." value="${a.partie_corps_precision||''}" oninput="S.accident.partie_corps_precision=this.value" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Type de blessure</label>
+        <select class="form-input" id="acc-blessure" onchange="S.accident.type_blessure=this.value">
+          <option value="">-- Choisir --</option>
+          ${TYPES_BLESSURE.map(b=>`<option value="${b}" ${a.type_blessure===b?'selected':''}>${b}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Prise en charge</label>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1.5px solid var(--gris-bord);border-radius:10px">
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="acc-sst" ${a.sst?'checked':''} onchange="S.accident.sst=this.checked" style="width:18px;height:18px" />
+            Pris en charge par un SST
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="acc-hopital" ${a.hopital?'checked':''} onchange="S.accident.hopital=this.checked" style="width:18px;height:18px" />
+            Transporté à l'hôpital
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Photo (optionnel)</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <label style="flex:1;padding:10px;border:1.5px solid var(--gris-bord);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;background:var(--bleu-clair);color:var(--bleu)">
+            📷 Appareil photo<input type="file" accept="image/*" capture="environment" onchange="gererPhotoEvt(this)" style="display:none" /></label>
+          <label style="flex:1;padding:10px;border:1.5px solid var(--gris-bord);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;background:var(--gris);color:var(--texte)">
+            🖼️ Galerie<input type="file" accept="image/*" onchange="gererPhotoEvt(this)" style="display:none" /></label>
+        </div>
+        ${(S.evtPhotos&&S.evtPhotos.length)?`
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px">
+            ${S.evtPhotos.map((url,i)=>`
+              <div style="position:relative">
+                <img src="${url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px" />
+                <button onclick="supprimerPhoto(${i})" style="position:absolute;top:2px;right:2px;background:rgba(220,38,38,0.9);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;cursor:pointer">✕</button>
+              </div>`).join('')}
+          </div>
+          <div style="font-size:11px;color:var(--texte-doux);margin-top:4px">${S.evtPhotos.length} photo(s)</div>
+        `:''}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Remarques</label>
+        <textarea class="form-input" id="acc-remarques" rows="3" placeholder="Informations complémentaires..." oninput="S.accident.remarques=this.value">${a.remarques||''}</textarea>
+        <button class="btn-mic" style="margin-top:6px" onclick="demarrerEcoute('acc-remarques')">🎙️ Dicter</button>
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+        <button class="btn-primary" style="flex:1;background:var(--rouge)" onclick="validerAccident()">🚨 Enregistrer</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function validerAccident(){
+  const lieu = document.getElementById('acc-lieu')?.value;
+  const comment = document.getElementById('acc-comment')?.value.trim();
+  const corps = document.getElementById('acc-corps')?.value;
+  const blessure = document.getElementById('acc-blessure')?.value;
+  if(!lieu) return toast('Indique le lieu','err');
+  if(!comment) return toast("Décris comment c'est arrivé",'err');
+  if(!corps) return toast('Indique la partie du corps touchée','err');
+  if(!blessure) return toast('Indique le type de blessure','err');
+  try{
+    const personne = document.getElementById('acc-personne')?.value.trim()||null;
+    await db.post('accidents',{
+      vacation_id: S.vacationActive?.id||null,
+      agent_id: S.agent.id,
+      personne,
+      lieu,
+      lieu_precision: document.getElementById('acc-lieu-precision')?.value.trim()||null,
+      comment,
+      partie_corps: corps,
+      partie_corps_precision: document.getElementById('acc-corps-precision')?.value.trim()||null,
+      type_blessure: blessure,
+      temoins: document.getElementById('acc-temoins')?.checked||false,
+      temoins_noms: document.getElementById('acc-temoins-noms')?.value.trim()||null,
+      pris_en_charge_sst: document.getElementById('acc-sst')?.checked||false,
+      transporte_hopital: document.getElementById('acc-hopital')?.checked||false,
+      remarques: document.getElementById('acc-remarques')?.value.trim()||null,
+      photo_url: (S.evtPhotos&&S.evtPhotos.length)?JSON.stringify(S.evtPhotos):null,
+    });
+    toast('🚨 Accident déclaré !','ok');
+    // Envoyer email immédiat
+    try{
+      const dateLabel = new Date().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      let contenuAccident = `<div style="padding:12px;background:#fee2e2;border-radius:8px;border-left:4px solid #dc2626">`;
+      contenuAccident += `<h3 style="color:#dc2626">🚨 ACCIDENT DU TRAVAIL</h3>`;
+      const pers = document.getElementById('acc-personne')?.value.trim();
+      if(pers) contenuAccident += `<p><strong>👤 Personne accidentée :</strong> ${pers}</p>`;
+      contenuAccident += `<p><strong>📍 Lieu :</strong> ${lieu}${document.getElementById('acc-lieu-precision')?.value?' — '+document.getElementById('acc-lieu-precision').value:''}</p>`;
+      contenuAccident += `<p><strong>📝 Comment :</strong> ${comment}</p>`;
+      contenuAccident += `<p><strong>🦵 Partie du corps :</strong> ${corps}${document.getElementById('acc-corps-precision')?.value?' — '+document.getElementById('acc-corps-precision').value:''}</p>`;
+      contenuAccident += `<p><strong>🩹 Blessure :</strong> ${blessure}</p>`;
+      contenuAccident += `<p><strong>🚑 SST :</strong> ${document.getElementById('acc-sst')?.checked?'✅ Oui':'❌ Non'} &nbsp; <strong>🏥 Hôpital :</strong> ${document.getElementById('acc-hopital')?.checked?'✅ Oui':'❌ Non'}</p>`;
+      const temoins = document.getElementById('acc-temoins')?.checked;
+      if(temoins) contenuAccident += `<p><strong>👁️ Témoins :</strong> ${document.getElementById('acc-temoins-noms')?.value||'Oui'}</p>`;
+      const remarques = document.getElementById('acc-remarques')?.value.trim();
+      if(remarques) contenuAccident += `<p><strong>💬 Remarques :</strong> ${remarques}</p>`;
+      contenuAccident += `</div>`;
+      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+        date: dateLabel,
+        contenu: contenuAccident,
+      });
+    }catch(err){ console.warn('Email accident non envoyé', err); }
+    S.evtPhoto=null;
+    fermerModal();
+  }catch(e){ toast('Erreur déclaration: '+e.message,'err'); console.error(e); }
 }
 </script>
 </body>
