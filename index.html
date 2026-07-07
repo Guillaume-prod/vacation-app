@@ -843,10 +843,16 @@ function renderModalEditAgent(){
       </div>
       <div class="form-group"><label class="form-label">Code d'accès</label><input class="form-input" type="text" id="edit-code" value="${a.code_acces}" /></div>
       <div class="form-group">
-        <label class="form-label">Accès admin</label>
-        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--gris-bord);border-radius:10px">
-          <input type="checkbox" id="edit-admin" ${a.est_responsable?'checked':''} style="width:18px;height:18px" />
-          <label for="edit-admin" style="font-size:13px">Cet agent a accès à l'admin</label>
+        <label class="form-label">Rôle</label>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1.5px solid var(--gris-bord);border-radius:10px">
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="edit-chef" ${a.est_chef_equipe?'checked':''} style="width:18px;height:18px" />
+            Chef d'équipe (accès au pointage)
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="edit-admin" ${a.est_responsable?'checked':''} style="width:18px;height:18px" />
+            Responsable (accès complet à l'admin)
+          </label>
         </div>
       </div>
       <div class="modal-btns">
