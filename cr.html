@@ -53,8 +53,8 @@ body { font-family: Arial, sans-serif; background: #f4f6f9; color: #1a1f2e; max-
 <div style="background:white;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   <label style="font-size:13px;font-weight:600;color:#5a6478">📅 Voir le CR du :</label>
   <input type="date" id="date-selector" style="padding:8px 12px;border:1.5px solid #dde3ed;border-radius:8px;font-size:13px;font-family:inherit" 
-    value="${new Date().toISOString().split('T')[0]}"
     onchange="window.location.href='cr.html?date='+this.value" />
+  <script>document.getElementById('date-selector').value=new Date().toISOString().split('T')[0];</script>
   <span style="font-size:12px;color:#94a3b8">(période 11h → 07h30)</span>
 </div>
 <div id="content"><div class="loader">⏳ Chargement des comptes rendus...</div></div>
