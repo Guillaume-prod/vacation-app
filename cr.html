@@ -50,6 +50,13 @@ body { font-family: Arial, sans-serif; background: #f4f6f9; color: #1a1f2e; max-
     <div class="header-sub" id="periode-label">La Poste – Mulhouse</div>
   </div>
 </div>
+<div style="background:white;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+  <label style="font-size:13px;font-weight:600;color:#5a6478">📅 Voir le CR du :</label>
+  <input type="date" id="date-selector" style="padding:8px 12px;border:1.5px solid #dde3ed;border-radius:8px;font-size:13px;font-family:inherit" 
+    value="${new Date().toISOString().split('T')[0]}"
+    onchange="window.location.href='cr.html?date='+this.value" />
+  <span style="font-size:12px;color:#94a3b8">(période 11h → 07h30)</span>
+</div>
 <div id="content"><div class="loader">⏳ Chargement des comptes rendus...</div></div>
 
 <script>
@@ -83,6 +90,25 @@ function parsePhotos(photoUrl){
   catch(e){ return [photoUrl]; }
 }
 
+function calcDureePointage(p){
+  if(!p.heure_debut||!p.heure_fin||p.statut!=='present') return '';
+  const toMin = h => { const parts=h.split(':').map(Number); return parts[0]*60+parts[1]; };
+  let total = toMin(p.heure_fin) - toMin(p.heure_debut);
+  if(total<0) total+=24*60;
+  // Déduire pauses
+  if(p.heure_debut_pause1&&p.heure_fin_pause1){
+    let pause = toMin(p.heure_fin_pause1)-toMin(p.heure_debut_pause1);
+    if(pause<0) pause+=24*60;
+    total-=pause;
+  }
+  if(p.heure_debut_pause2&&p.heure_fin_pause2){
+    let pause = toMin(p.heure_fin_pause2)-toMin(p.heure_debut_pause2);
+    if(pause<0) pause+=24*60;
+    total-=pause;
+  }
+  return Math.round(total/6)/10;
+}
+
 function calcDuree(debut, fin){
   if(!debut||!fin) return '';
   const partsDeb = debut.split(':').map(Number);
@@ -99,13 +125,27 @@ async function charger(){
   const params = new URLSearchParams(window.location.search);
   const vacationId = params.get('id');
 
-  // Période : 11h00 hier → maintenant
+  // Période : paramètre URL ou 11h00 hier → maintenant
   const maintenant = new Date();
-  const hier = new Date(maintenant);
-  hier.setDate(hier.getDate()-1);
-  const dateDebut = hier.toISOString().split('T')[0] + 'T09:00:00Z'; // 11h UTC+2
-  const dateFin = maintenant.toISOString();
-  const dateLabel = `${hier.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})} 11h00 → ${maintenant.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})} ${fmtHeure(maintenant.toISOString())}`;
+  const params2 = new URLSearchParams(window.location.search);
+  const dateParam = params2.get('date'); // format YYYY-MM-DD
+  
+  let dateDebut, dateFin, dateLabel;
+  if(dateParam){
+    // Date spécifique passée en paramètre
+    const dateChoisie = new Date(dateParam + 'T09:00:00Z'); // 11h UTC+2
+    const dateSuivante = new Date(dateParam);
+    dateSuivante.setDate(dateSuivante.getDate()+1);
+    dateDebut = dateChoisie.toISOString();
+    dateFin = dateSuivante.toISOString().split('T')[0] + 'T07:30:00Z'; // 9h30 UTC+2
+    dateLabel = `${dateChoisie.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})} 11h00 → ${dateSuivante.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})} 07h30`;
+  } else {
+    const hier = new Date(maintenant);
+    hier.setDate(hier.getDate()-1);
+    dateDebut = hier.toISOString().split('T')[0] + 'T09:00:00Z';
+    dateFin = maintenant.toISOString();
+    dateLabel = `${hier.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})} 11h00 → ${maintenant.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})} ${fmtHeure(maintenant.toISOString())}`;
+  }
   document.getElementById('periode-label').textContent = dateLabel;
 
   try{
@@ -178,7 +218,7 @@ async function charger(){
                 <td style="font-weight:700">${(l.colis_concentration||0)+(l.colis_dispersion||0)+(l.colis_distribution||0)}</td>
               </tr>`).join('')}
               <tr class="total-row">
-                <td>TOTAL</td><td colspan="3"></td>
+                <td>TOTAL</td><td colspan="4"></td>
                 <td>${liaisons.reduce((s,l)=>s+(l.colis_concentration||0),0)}</td>
                 <td>${liaisons.reduce((s,l)=>s+(l.colis_dispersion||0),0)}</td>
                 <td>${liaisons.reduce((s,l)=>s+(l.colis_distribution||0),0)}</td>
@@ -205,7 +245,41 @@ async function charger(){
           });
         }
 
-        if(!evts.length && !liaisons.length){
+        // Pointage
+        const pointages = await sbGet(`pointages?vacation_id=eq.${v.id}&order=created_at.asc`);
+        if(pointages.length){
+          html += `<div class="section-title" style="margin-top:12px">📋 Pointage</div>`;
+          html += `<table class="table-liaisons">
+            <thead><tr>
+              <th style="text-align:left">Agent</th>
+              <th>Statut</th>
+              <th>Début</th>
+              <th>Pause 1</th>
+              <th>Pause 2</th>
+              <th>Fin</th>
+              <th>Durée (h)</th>
+            </tr></thead>
+            <tbody>`;
+          pointages.forEach(p=>{
+            const ag = agents.find(a=>a.id===p.agent_id);
+            const duree = calcDureePointage(p);
+            const statutLabel = p.statut==='present'?'✅ Présent':p.statut==='cp'?'🏖️ CP':'⚠️ Absent';
+            const pause1 = p.heure_debut_pause1?(p.heure_debut_pause1+(p.heure_fin_pause1?' → '+p.heure_fin_pause1:'')):'—';
+            const pause2 = p.heure_debut_pause2?(p.heure_debut_pause2+(p.heure_fin_pause2?' → '+p.heure_fin_pause2:'')):'—';
+            html += `<tr>
+              <td style="font-weight:600">${ag?.prenom||'?'} ${ag?.nom||''}</td>
+              <td style="text-align:center">${statutLabel}</td>
+              <td style="text-align:center">${p.heure_debut||'—'}</td>
+              <td style="text-align:center">${pause1}</td>
+              <td style="text-align:center">${pause2}</td>
+              <td style="text-align:center">${p.heure_fin||'—'}</td>
+              <td style="text-align:center;font-weight:700">${duree||'—'}</td>
+            </tr>`;
+          });
+          html += `</tbody></table>`;
+        }
+
+        if(!evts.length && !liaisons.length && !pointages.length){
           html += `<div class="empty">Aucun élément enregistré.</div>`;
         }
         html += '<hr style="margin:14px 0;border:none;border-top:1px solid #eee">';
@@ -222,6 +296,24 @@ async function charger(){
         lv.forEach(l=>toutesLiaisons.push({...l, equipe}));
       }
     }
+
+    // Collect all pointages for Excel (always, even without liaisons)
+    const allPointagesGlobal = [];
+    for(const equipe of EQUIPES){
+      const vacsEqG = vacations.filter(v=>v.equipe===equipe);
+      for(const v of vacsEqG){
+        const pts = await sbGet(`pointages?vacation_id=eq.${v.id}&order=created_at.asc`);
+        pts.forEach(p=>{
+          const ag = agents.find(a=>a.id===p.agent_id);
+          allPointagesGlobal.push({
+            ...p, equipe,
+            agentNom: `${ag?.prenom||'?'} ${ag?.nom||''}`,
+            duree: calcDureePointage(p)
+          });
+        });
+      }
+    }
+    window._tousPointages = allPointagesGlobal;
 
     if(toutesLiaisons.length){
       html += `<div class="card" id="tableau-global">
@@ -253,7 +345,7 @@ async function charger(){
             </tr>`).join('')}
             <tr class="total-row">
               <td colspan="2">TOTAL GÉNÉRAL</td>
-              <td colspan="3"></td>
+              <td colspan="4"></td>
               <td style="text-align:center">${toutesLiaisons.reduce((s,l)=>s+(l.colis_concentration||0),0)}</td>
               <td style="text-align:center">${toutesLiaisons.reduce((s,l)=>s+(l.colis_dispersion||0),0)}</td>
               <td style="text-align:center">${toutesLiaisons.reduce((s,l)=>s+(l.colis_distribution||0),0)}</td>
@@ -282,7 +374,8 @@ charger();
 
 function exporterExcel(){
   const liaisons = window._liaisonsData||[];
-  if(!liaisons.length){ alert('Aucune donnée à exporter'); return; }
+  const pointagesExport = window._tousPointages||[];
+  if(!liaisons.length && !pointagesExport.length){ alert('Aucune donnée à exporter'); return; }
 
   const equipes = ['Concentration','Soirée','Nuit'];
   const wb = XLSX.utils.book_new();
@@ -310,7 +403,7 @@ function exporterExcel(){
       rowIdx++;
     });
     rows.push([
-      `Sous-total ${eq}`,'','','','',
+      `Sous-total ${eq}`,'','','','','',
       lEq.reduce((s,l)=>s+(l.colis_concentration||0),0),
       lEq.reduce((s,l)=>s+(l.colis_dispersion||0),0),
       lEq.reduce((s,l)=>s+(l.colis_distribution||0),0),
@@ -321,7 +414,7 @@ function exporterExcel(){
     rowIdx++;
   });
 
-  const totalRow = ['TOTAL GÉNÉRAL','','','','',
+  const totalRow = ['TOTAL GÉNÉRAL','','','','','',
     liaisons.reduce((s,l)=>s+(l.colis_concentration||0),0),
     liaisons.reduce((s,l)=>s+(l.colis_dispersion||0),0),
     liaisons.reduce((s,l)=>s+(l.colis_distribution||0),0),
@@ -377,6 +470,26 @@ function exporterExcel(){
     });
     XLSX.utils.book_append_sheet(wb, wsEq, eq.substring(0,31));
   });
+
+  // Feuille pointage global
+  const tousPointages = window._tousPointages||[];
+  if(tousPointages.length){
+    const rowsPt = [
+      ['Équipe','Agent','Statut','Heure début','Pause 1 début','Pause 1 fin','Pause 2 début','Pause 2 fin','Heure fin','Durée (h)']
+    ];
+    tousPointages.forEach(p=>{
+      rowsPt.push([
+        p.equipe||'', p.agentNom||'',
+        p.statut==='present'?'Présent':p.statut==='cp'?'CP':'Absent',
+        p.heure_debut||'', p.heure_debut_pause1||'', p.heure_fin_pause1||'',
+        p.heure_debut_pause2||'', p.heure_fin_pause2||'',
+        p.heure_fin||'', p.duree||''
+      ]);
+    });
+    const wsPt = XLSX.utils.aoa_to_sheet(rowsPt);
+    wsPt['!cols'] = [{wch:15},{wch:22},{wch:10},{wch:12},{wch:14},{wch:12},{wch:14},{wch:12},{wch:12},{wch:10}];
+    XLSX.utils.book_append_sheet(wb, wsPt, 'Pointage');
+  }
 
   const date = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
   XLSX.writeFile(wb, `liaisons-${date}.xlsx`);
