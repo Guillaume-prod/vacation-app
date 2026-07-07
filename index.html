@@ -276,6 +276,24 @@ async function charger(){
       }
     }
 
+    // Collect all pointages for Excel (always, even without liaisons)
+    const allPointagesGlobal = [];
+    for(const equipe of EQUIPES){
+      const vacsEqG = vacations.filter(v=>v.equipe===equipe);
+      for(const v of vacsEqG){
+        const pts = await sbGet(`pointages?vacation_id=eq.${v.id}&order=created_at.asc`);
+        pts.forEach(p=>{
+          const ag = agents.find(a=>a.id===p.agent_id);
+          allPointagesGlobal.push({
+            ...p, equipe,
+            agentNom: `${ag?.prenom||'?'} ${ag?.nom||''}`,
+            duree: calcDureePointage(p)
+          });
+        });
+      }
+    }
+    window._tousPointages = allPointagesGlobal;
+
     if(toutesLiaisons.length){
       html += `<div class="card" id="tableau-global">
         <div class="card-title">📊 Récapitulatif global — Toutes équipes confondues</div>
@@ -319,24 +337,6 @@ async function charger(){
       // Stocker les données pour export Excel
       window._liaisonsData = toutesLiaisons;
       window._dateLabel = dateLabel;
-      // Collect all pointages for Excel
-      const allPointages = [];
-      for(const equipe of EQUIPES){
-        const vacsEq = vacations.filter(v=>v.equipe===equipe);
-        for(const v of vacsEq){
-          const pts = await sbGet(`pointages?vacation_id=eq.${v.id}&order=created_at.asc`);
-          pts.forEach(p=>{
-            const ag = agents.find(a=>a.id===p.agent_id);
-            allPointages.push({
-              ...p,
-              equipe,
-              agentNom: `${ag?.prenom||'?'} ${ag?.nom||''}`,
-              duree: calcDureePointage(p)
-            });
-          });
-        }
-      }
-      window._tousPointages = allPointages;
     }
 
     html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
@@ -353,7 +353,8 @@ charger();
 
 function exporterExcel(){
   const liaisons = window._liaisonsData||[];
-  if(!liaisons.length){ alert('Aucune donnée à exporter'); return; }
+  const pointagesExport = window._tousPointages||[];
+  if(!liaisons.length && !pointagesExport.length){ alert('Aucune donnée à exporter'); return; }
 
   const equipes = ['Concentration','Soirée','Nuit'];
   const wb = XLSX.utils.book_new();
