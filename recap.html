@@ -11,7 +11,7 @@
 <script>
 const SUPABASE_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_dES9U1T02LLNFXtR2RgtLg_b4UWK5cv';
-const RESEND_KEY = 're_Ec1SdFLv_NVkkUA2ChUzaasThhjVsRMLZ';
+const EMAIL_FUNCTION_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co/functions/v1/resend-email';
 const EMAIL_TO = 'g.azar@prodea.fr';
 const EMAILJS_SERVICE = 'service_qtkzz3d';
 const EMAILJS_TEMPLATE = 'template_pm7xbso';
@@ -105,12 +105,11 @@ async function envoyerRecap(){
     }
 
     // Envoyer l'email
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch(EMAIL_FUNCTION_URL, {
       method: 'POST',
-      headers: {'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json'},
+      headers: {'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json'},
       body: JSON.stringify({
-        from: 'onboarding@resend.dev',
-        to: [EMAIL_TO],
+        to: EMAIL_TO,
         subject: `📋 Récapitulatif vacations – ${dateLabel}`,
         html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto"><h2 style="color:#1a56a0">📋 Récapitulatif des vacations – La Poste Mulhouse</h2><p><strong>Date :</strong> ${dateLabel}</p><hr>${contenu}<p style="color:#aaa;font-size:12px">Envoyé automatiquement – Application Vacation MLH</p></div>`
       })
