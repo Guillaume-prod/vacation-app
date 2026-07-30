@@ -110,9 +110,8 @@ textarea.form-input { resize: none; }
 <script>
 const SUPABASE_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_dES9U1T02LLNFXtR2RgtLg_b4UWK5cv';
-const RESEND_KEY = 're_g6yWDxF9_ML9oNuwET11R7eGr9DJp9RHX';
+const EMAIL_FUNCTION_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co/functions/v1/hyper-worker';
 const EMAIL_TO = 'g.azar@prodea.fr';
-const EMAIL_FROM = 'onboarding@resend.dev';
 const EQUIPES = ['Concentration', 'Soirée', 'Nuit'];
 const ORDRE_EQUIPES = {Concentration:'Nuit', Soirée:'Concentration', Nuit:'Soirée'}; // équipe précédente
 const TYPES_EVT = {
@@ -130,15 +129,14 @@ const LIAISONS_PAR_EQUIPE = {
 
 async function sendEmail(subject, htmlContent){
   try{
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch(EMAIL_FUNCTION_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${RESEND_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_KEY}`
       },
       body: JSON.stringify({
-        from: EMAIL_FROM,
-        to: [EMAIL_TO],
+        to: EMAIL_TO,
         subject: subject,
         html: htmlContent
       })
