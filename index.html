@@ -103,16 +103,16 @@ textarea.form-input { resize: none; }
 .lien-danger { background: none; border: none; color: var(--rouge); font-size: 13px; cursor: pointer; text-decoration: underline; }
 .evt-photo { width: 100%; border-radius: 10px; margin-top: 8px; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
 </head>
 <body>
 <div id="app"></div>
 <script>
 const SUPABASE_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_dES9U1T02LLNFXtR2RgtLg_b4UWK5cv';
-const EMAILJS_SERVICE = 'service_qtkzz3d';
-const EMAILJS_TEMPLATE = 'template_pm7xbso';
-const EMAILJS_KEY = 'eqbebprUUz1zVz_tv';
+const RESEND_KEY = 're_g6yWDxF9_ML9oNuwET11R7eGr9DJp9RHX';
+const EMAIL_TO = 'g.azar@prodea.fr';
+const EMAIL_FROM = 'onboarding@resend.dev';
 const EQUIPES = ['Concentration', 'Soirée', 'Nuit'];
 const ORDRE_EQUIPES = {Concentration:'Nuit', Soirée:'Concentration', Nuit:'Soirée'}; // équipe précédente
 const TYPES_EVT = {
@@ -128,7 +128,25 @@ const LIAISONS_PAR_EQUIPE = {
   'Nuit': ['Erstein 4','Erstein 5','Erstein 6','Chronopost','SUPP'],
 };
 
-emailjs.init(EMAILJS_KEY);
+async function sendEmail(subject, htmlContent){
+  try{
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: EMAIL_FROM,
+        to: [EMAIL_TO],
+        subject: subject,
+        html: htmlContent
+      })
+    });
+    if(!res.ok){ const e=await res.json(); throw new Error(e.message||'Erreur'); }
+    return await res.json();
+  }catch(e){ console.warn('Email non envoyé:', e.message); throw e; }
+}
 
 async function sbFetch(method, path, body){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -684,10 +702,11 @@ async function envoyerCRParEmail(){
   contenu += `<tr><td style="padding:12px;text-align:center"><a href="${lienCR}" style="background:#1a56a0;color:white;padding:10px 20px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block">📋 Voir le CR complet &amp; PDF</a></td></tr>`;
   contenu += `</table>`;
   try{
-    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-      date: fmtDateTime(cr.vacation.date_debut),
-      contenu,
-    });
+    const agentCR = S.tousAgents.find(a=>a.id===cr.vacation.agent_id);
+    await sendEmail(
+      `📋 CR Vacation – ${agentCR?.prenom||''} ${agentCR?.nom||''} (${cr.vacation.equipe||''})`,
+      `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto"><h2 style="color:#1a56a0">📋 Compte rendu de vacation</h2><p><strong>Date :</strong> ${fmtDateTime(cr.vacation.date_debut)}</p><hr>${contenu}<p style="color:#aaa;font-size:12px">La Poste – Mulhouse</p></div>`
+    );
     toast('✅ CR envoyé par email !','ok');
   }catch(e){ toast('Erreur envoi email','err'); }
 }
@@ -1529,10 +1548,10 @@ async function validerAccident(){
       const remarques = document.getElementById('acc-remarques')?.value.trim();
       if(remarques) contenuAccident += `<p><strong>💬 Remarques :</strong> ${remarques}</p>`;
       contenuAccident += `</div>`;
-      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-        date: dateLabel,
-        contenu: contenuAccident,
-      });
+      await sendEmail(
+        `🚨 Accident déclaré – ${S.agent.prenom} ${S.agent.nom} (${S.agent.equipe||''})`,
+        `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto"><h2 style="color:#dc2626">🚨 Déclaration d'accident</h2><p><strong>Date :</strong> ${dateLabel}</p><hr>${contenuAccident}<p style="color:#aaa;font-size:12px">La Poste – Mulhouse</p></div>`
+      );
     }catch(err){ console.warn('Email accident non envoyé', err); }
     S.evtPhoto=null;
     fermerModal();
