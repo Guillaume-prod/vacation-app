@@ -112,6 +112,7 @@ const SUPABASE_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_dES9U1T02LLNFXtR2RgtLg_b4UWK5cv';
 const EMAIL_FUNCTION_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co/functions/v1/resend-email';
 const EMAIL_TO = 'g.azar@prodea.fr';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtZHJsbnF0amtna2pyeWF0ZGJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4MDI5NDQsImV4cCI6MjA5ODM3ODk0NH0.f6kRe_P89CTXm7ZMPaSVVJbZXTdw6c4ZZGyfConiNaY';
 const EQUIPES = ['Concentration', 'Soirée', 'Nuit'];
 const ORDRE_EQUIPES = {Concentration:'Nuit', Soirée:'Concentration', Nuit:'Soirée'}; // équipe précédente
 const TYPES_EVT = {
@@ -133,7 +134,7 @@ async function sendEmail(subject, htmlContent){
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_KEY}`
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
       },
       body: JSON.stringify({
         to: EMAIL_TO,
@@ -150,7 +151,7 @@ async function sbFetch(method, path, body){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     method,
     headers: {
-      'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
       'Content-Type': 'application/json',
       'Prefer': method==='POST' ? 'return=representation' : 'return=minimal'
     },
@@ -409,7 +410,7 @@ function gererPhotoEvt(input){
             method: 'POST',
             headers: {
               'apikey': SUPABASE_KEY,
-              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
               'Content-Type': 'image/jpeg',
             },
             body: blob
