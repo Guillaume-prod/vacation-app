@@ -107,7 +107,7 @@ async function envoyerRecap(){
     // Envoyer l'email
     const res = await fetch(EMAIL_FUNCTION_URL, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`},
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         to: EMAIL_TO,
         subject: `📋 Récapitulatif vacations – ${dateLabel}`,
