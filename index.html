@@ -110,8 +110,11 @@ textarea.form-input { resize: none; }
 <script>
 const SUPABASE_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_dES9U1T02LLNFXtR2RgtLg_b4UWK5cv';
-const EMAIL_FUNCTION_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co/functions/v1/send-mail';
+const EMAILJS_SERVICE = 'service_qtkzz3d';
+const EMAILJS_TEMPLATE = 'template_pm7xbso';
+const EMAILJS_KEY = 'eqbebprUUz1zVz_tv';
 const EMAIL_TO = 'g.azar@prodea.fr';
+emailjs.init(EMAILJS_KEY);
 const EQUIPES = ['Concentration', 'Soirée', 'Nuit'];
 const ORDRE_EQUIPES = {Concentration:'Nuit', Soirée:'Concentration', Nuit:'Soirée'}; // équipe précédente
 const TYPES_EVT = {
@@ -129,19 +132,10 @@ const LIAISONS_PAR_EQUIPE = {
 
 async function sendEmail(subject, htmlContent){
   try{
-    const res = await fetch(EMAIL_FUNCTION_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        to: EMAIL_TO,
-        subject: subject,
-        html: htmlContent
-      })
+    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+      date: new Date().toLocaleString('fr-FR'),
+      contenu: htmlContent,
     });
-    if(!res.ok){ const e=await res.json(); throw new Error(e.message||'Erreur'); }
-    return await res.json();
   }catch(e){ console.warn('Email non envoyé:', e.message); throw e; }
 }
 
