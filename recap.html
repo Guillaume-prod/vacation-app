@@ -11,8 +11,11 @@
 <script>
 const SUPABASE_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_dES9U1T02LLNFXtR2RgtLg_b4UWK5cv';
-const EMAIL_FUNCTION_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co/functions/v1/send-mail';
+const EMAILJS_SERVICE = 'service_qtkzz3d';
+const EMAILJS_TEMPLATE = 'template_pm7xbso';
+const EMAILJS_KEY = 'eqbebprUUz1zVz_tv';
 const EMAIL_TO = 'g.azar@prodea.fr';
+emailjs.init(EMAILJS_KEY);
 const EMAILJS_SERVICE = 'service_qtkzz3d';
 const EMAILJS_TEMPLATE = 'template_pm7xbso';
 const EMAILJS_KEY = 'eqbebprUUz1zVz_tv';
@@ -105,16 +108,10 @@ async function envoyerRecap(){
     }
 
     // Envoyer l'email
-    const res = await fetch(EMAIL_FUNCTION_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        to: EMAIL_TO,
-        subject: `📋 Récapitulatif vacations – ${dateLabel}`,
-        html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto"><h2 style="color:#1a56a0">📋 Récapitulatif des vacations – La Poste Mulhouse</h2><p><strong>Date :</strong> ${dateLabel}</p><hr>${contenu}<p style="color:#aaa;font-size:12px">Envoyé automatiquement – Application Vacation MLH</p></div>`
-      })
+    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+      date: dateLabel,
+      contenu: contenu,
     });
-    if(!res.ok){ const e=await res.json(); throw new Error(e.message); }
 
     status.innerHTML = `✅ Récapitulatif envoyé avec succès pour le ${dateLabel}`;
     status.style.color = '#16a34a';
