@@ -132,8 +132,7 @@ async function sendEmail(subject, htmlContent){
     const res = await fetch(EMAIL_FUNCTION_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_KEY}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         to: EMAIL_TO,
