@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -38,9 +37,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .card { background: white; border-radius: var(--radius); box-shadow: var(--ombre); padding: 18px; margin-bottom: 14px; }
 .card-title { font-size: 13px; font-weight: 700; color: var(--texte-doux); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
 .equipe-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 12px; }
-.equipe-badge.Concentration { background: var(--bleu-clair); color: var(--bleu); }
-.equipe-badge.Soirée { background: var(--violet-pale); color: var(--violet); }
-.equipe-badge.Nuit { background: #1a1f2e; color: white; }
+.equipe-badge.Aprem { background: var(--violet-pale); color: var(--violet); }
+.equipe-badge.Matin { background: var(--bleu-clair); color: var(--bleu); }
 .equipe-badge.none { background: var(--gris); color: var(--texte-doux); }
 .badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
 .badge.en_cours { background: var(--orange-pale); color: var(--orange); }
@@ -104,20 +102,15 @@ textarea.form-input { resize: none; }
 .lien-danger { background: none; border: none; color: var(--rouge); font-size: 13px; cursor: pointer; text-decoration: underline; }
 .evt-photo { width: 100%; border-radius: 10px; margin-top: 8px; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
 <script>
 const SUPABASE_URL = 'https://bmdrlnqtjkgkjryatdbz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_dES9U1T02LLNFXtR2RgtLg_b4UWK5cv';
-const EMAILJS_SERVICE = 'service_qtkzz3d';
-const EMAILJS_TEMPLATE = 'template_pm7xbso';
-const EMAILJS_KEY = 'eqbebprUUz1zVz_tv';
 const EMAIL_TO = 'g.azar@prodea.fr';
-emailjs.init(EMAILJS_KEY);
-const EQUIPES = ['Concentration', 'Soirée', 'Nuit'];
-const ORDRE_EQUIPES = {Concentration:'Nuit', Soirée:'Concentration', Nuit:'Soirée'}; // équipe précédente
+const EQUIPES = ['Aprem', 'Matin'];
+const ORDRE_EQUIPES = {Aprem:'Matin', Matin:'Aprem'}; // équipe précédente
 const TYPES_EVT = {
   liaison: {icon:'🚛', label:'Liaison', couleur:'#1a56a0'},
   colis: {icon:'📦', label:'Colis', couleur:'#d97706'},
@@ -126,19 +119,9 @@ const TYPES_EVT = {
 };
 
 const LIAISONS_PAR_EQUIPE = {
-  'Concentration': ['Concentration 1','Concentration 2','Concentration 3','Erstein 1'],
-  'Soirée': ['Erstein 1','Erstein 2','Erstein 3','Erstein 4','SUPP'],
-  'Nuit': ['Erstein 4','Erstein 5','Erstein 6','Chronopost','SUPP'],
+  'Aprem': ['Concentration 1','Concentration 2','Concentration 3','Erstein 1','Erstein 2','Erstein 3','Erstein 4','SUPP'],
+  'Matin': ['Erstein 4','Erstein 5','Erstein 6','Chronopost','SUPP'],
 };
-
-async function sendEmail(subject, htmlContent){
-  try{
-    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-      date: new Date().toLocaleString('fr-FR'),
-      contenu: htmlContent,
-    });
-  }catch(e){ console.warn('Email non envoyé:', e.message); throw e; }
-}
 
 async function sbFetch(method, path, body){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -172,7 +155,7 @@ function dateLocale(d){const y=d.getFullYear();const m=String(d.getMonth()+1).pa
 function toast(msg,type='ok'){const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),3500);}
 function equipeBadge(eq){
   const e=eq||'—'; const cls=EQUIPES.includes(e)?e:'none';
-  const icons={Concentration:'☀️',Soirée:'🌆',Nuit:'🌙'};
+  const icons={Aprem:'🌆',Matin:'☀️'};
   return `<span class="equipe-badge ${cls}">${icons[e]||'👤'} ${e}</span>`;
 }
 function fmtDateTime(iso){ if(!iso) return '—'; const d=new Date(iso.endsWith('Z')?iso:iso+'Z'); return d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
@@ -494,12 +477,12 @@ async function terminerVacation(){
   try{
     await db.patch('vacations',`id=eq.${S.vacationActive.id}`,{statut:'terminee', date_fin:new Date().toISOString()});
     toast('✅ Vacation terminée !','ok');
-    const estNuit = S.agent.equipe === 'Nuit';
+    const estMatin = S.agent.equipe === 'Matin';
     S.vacationActive=null;
     await chargerTout();
     render();
     // Si équipe Nuit, proposer d'envoyer le récap maintenant
-    if(estNuit){
+    if(estMatin){
       setTimeout(()=>{
         S.modal='recap-nuit';
         render();
@@ -511,22 +494,18 @@ async function terminerVacation(){
 function renderModalRecapNuit(){
   return `<div class="modal-overlay">
     <div class="modal">
-      <div class="modal-title">📧 Envoyer le récapitulatif ?</div>
+      <div class="modal-title">📄 Compte rendu de vacation</div>
       <p style="font-size:14px;color:var(--texte-doux);margin-bottom:20px;line-height:1.5">
         La vacation de nuit est terminée.<br>
-        Veux-tu envoyer le récapitulatif maintenant, ou laisser l'envoi automatique à 7h30 ?
+        Veux-tu télécharger le compte rendu en PDF ?
       </p>
       <button class="btn-primary" style="margin-bottom:10px" onclick="envoyerRecapEtFermer()">📧 Envoyer maintenant</button>
-      <button class="btn-annuler" style="width:100%" onclick="fermerModal()">⏰ Laisser l'envoi automatique à 7h30</button>
+      <button class="btn-annuler" style="width:100%" onclick="fermerModal()">Plus tard</button>
     </div>
   </div>`;
 }
 
-async function envoyerRecapEtFermer(){
-  fermerModal();
-  toast('📧 Ouverture en cours...','ok');
-  window.open('https://guillaume-prod.github.io/vacation-app/recap.html','_blank');
-}
+
 
 // ── CHARGEMENT DONNÉES ──────────────────────────────────────────
 async function chargerVacationEnCours(){
@@ -660,7 +639,6 @@ function renderModalCompteRendu(){
       `:''}
       <div class="modal-btns" onclick="event.stopPropagation()">
         <button class="btn-annuler" style="flex:1" onclick="fermerModal()">Fermer</button>
-        <button class="btn-primary" style="flex:1" onclick="event.stopPropagation();envoyerCRParEmail()">📧 Email</button>
         <button class="btn-primary" style="flex:1;background:var(--vert)" onclick="event.stopPropagation();imprimerCR()">📄 PDF</button>
       </div>
     </div>
@@ -671,36 +649,6 @@ async function chargerLiaisonsModal(){
   if(!S.compteRenduActuel) return;
   S.liaisonsModal = await chargerLiaisons(S.compteRenduActuel.vacation.id);
   render();
-}
-
-async function envoyerCRParEmail(){
-  const cr = S.compteRenduActuel; if(!cr) return;
-  const agent = S.tousAgents.find(a=>a.id===cr.vacation.agent_id);
-  const parCategorie = {liaison:[],colis:[],incident:[],anomalie:[]};
-  cr.evenements.forEach(e=>{ if(parCategorie[e.type]) parCategorie[e.type].push(e); });
-  const TYPES = {liaison:'🚛',colis:'📦',incident:'⚠️',anomalie:'🔧'};
-  const lienCR = `https://guillaume-prod.github.io/vacation-app/cr.html?id=${cr.vacation.id}`;
-  let contenu = '';
-  contenu += `<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif">`;
-  contenu += `<tr><td style="background:#1a56a0;color:white;padding:12px"><b>👤 ${agent?.prenom||''} ${agent?.nom||''} — ${cr.vacation.equipe||''}</b></td></tr>`;
-  contenu += `<tr><td style="background:#f4f6f9;color:#666;font-size:12px;padding:8px">${fmtDateTime(cr.vacation.date_debut)} → ${fmtDateTime(cr.vacation.date_fin)}</td></tr>`;
-  Object.entries(parCategorie).forEach(([type,liste])=>{
-    if(!liste.length) return;
-    const colors={liaison:'#1a56a0',colis:'#d97706',incident:'#dc2626',anomalie:'#7c3aed'};
-    contenu += `<tr><td style="padding:8px;border-top:2px solid ${colors[type]||'#ccc'}"><b style="color:${colors[type]||'#333'}">${TYPES[type]} ${type.charAt(0).toUpperCase()+type.slice(1)} (${liste.length})</b>`;
-    liste.forEach(e=>{ contenu += `<br>• ${e.texte}`; });
-    contenu += `</td></tr>`;
-  });
-  contenu += `<tr><td style="padding:12px;text-align:center"><a href="${lienCR}" style="background:#1a56a0;color:white;padding:10px 20px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block">📋 Voir le CR complet &amp; PDF</a></td></tr>`;
-  contenu += `</table>`;
-  try{
-    const agentCR = S.tousAgents.find(a=>a.id===cr.vacation.agent_id);
-    await sendEmail(
-      `📋 CR Vacation – ${agentCR?.prenom||''} ${agentCR?.nom||''} (${cr.vacation.equipe||''})`,
-      `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto"><h2 style="color:#1a56a0">📋 Compte rendu de vacation</h2><p><strong>Date :</strong> ${fmtDateTime(cr.vacation.date_debut)}</p><hr>${contenu}<p style="color:#aaa;font-size:12px">La Poste – Mulhouse</p></div>`
-    );
-    toast('✅ CR envoyé par email !','ok');
-  }catch(e){ toast('Erreur envoi email','err'); }
 }
 
 function imprimerCR(){
@@ -771,11 +719,11 @@ function renderAdminVacations(){
   const vacations=S.toutesVacations||[];
   const filtrees=S.filtreEquipe==='Toutes'?vacations:vacations.filter(v=>v.equipe===S.filtreEquipe);
   return `
-  <div class="card" style="background:var(--bleu);color:white;cursor:pointer" onclick="envoyerRecapMaintenant()">
+  <div class="card" style="background:var(--vert);color:white;cursor:pointer" onclick="ouvrirCRPDF()">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-weight:700;font-size:15px">📧 Envoyer le récap maintenant</div>
-        <div style="font-size:12px;opacity:0.8;margin-top:3px">Envoie immédiatement le compte rendu par email</div>
+        <div style="font-weight:700;font-size:15px">📄 Télécharger le CR en PDF</div>
+        <div style="font-size:12px;opacity:0.8;margin-top:3px">Génère un PDF complet du compte rendu du jour</div>
       </div>
       <span style="font-size:24px">→</span>
     </div>
@@ -809,10 +757,8 @@ function renderAdminVacations(){
   }`;
 }
 
-async function envoyerRecapMaintenant(){
-  if(!confirm('Envoyer le récapitulatif par email maintenant ?')) return;
-  toast('📧 Ouverture en cours...','ok');
-  window.open('https://guillaume-prod.github.io/vacation-app/recap.html','_blank');
+function ouvrirCRPDF(){
+  window.open('https://guillaume-prod.github.io/vacation-app/cr.html','_blank');
 }
 
 function renderAdminAgents(){
@@ -1001,7 +947,7 @@ render();
 // ── POINTAGE ────────────────────────────────────────────────────
 function renderPointageAdmin(){
   // Vue admin : tous les pointages en cours toutes équipes
-  const equipes = ['Concentration','Soirée','Nuit'];
+  const equipes = ['Aprem','Aprem','Matin'];
   const icons = {Concentration:'☀️', Soirée:'🌆', Nuit:'🌙'};
   return `<div class="card">
     <div class="card-title">📋 Pointage — Vue globale</div>
@@ -1540,11 +1486,7 @@ async function validerAccident(){
       const remarques = document.getElementById('acc-remarques')?.value.trim();
       if(remarques) contenuAccident += `<p><strong>💬 Remarques :</strong> ${remarques}</p>`;
       contenuAccident += `</div>`;
-      await sendEmail(
-        `🚨 Accident déclaré – ${S.agent.prenom} ${S.agent.nom} (${S.agent.equipe||''})`,
-        `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto"><h2 style="color:#dc2626">🚨 Déclaration d'accident</h2><p><strong>Date :</strong> ${dateLabel}</p><hr>${contenuAccident}<p style="color:#aaa;font-size:12px">La Poste – Mulhouse</p></div>`
-      );
-    }catch(err){ console.warn('Email accident non envoyé', err); }
+    }catch(err){ console.warn('Erreur construction contenu accident', err); }
     S.evtPhoto=null;
     fermerModal();
   }catch(e){ toast('Erreur déclaration: '+e.message,'err'); console.error(e); }
