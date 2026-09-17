@@ -123,6 +123,23 @@ const LIAISONS_PAR_EQUIPE = {
   'Matin': ['Liaison 3','Liaison 4','Liaison 5','Liaison 6','Liaison 7','Chrono 1','Chrono 2','SUPP 3','SUPP 4'],
 };
 
+const PERSONNEL_EQUIPE = {
+  'Aprem': {
+    'Concentration': ['LAALMI Firienne','WASCAT Fabrice','ANDELKOVIC Nemanja','AHMADI Sadeq','OUARIACHI Driss'],
+    'Disp+Dist': ['BOUHABILA Nawfel','AIT KASSI Hassan','ALERTE Romuald','BAJRAMI Bahir','DALLEAU Marie-Julie','DE JESUS Mickael','DERRI Yamina','DOGAN Gorkem','FAKHOUR Naïma','FISHER Mike','FLECK Stéphane','HARTZ Claude','KOTETS Olena','LONGO Quentin','MUNGA Louison','PROUET Christopher','RAHHAL Essaïd','VERONESE Baptiste','WATRE Loic']
+  },
+  'Matin': {
+    'Équipe Matin': ['BACHA Ismaïl','BACHA Soulaymane','BEJAOUI Béchir','BOUKHEMERRA Niasse','BOUKOURIDA Mohamed','BRIN Grégory','DI SCIULLO Danielle','ERTLE Kévin','HAITHAM Wali','HAMIMSA Mohamed','LUSTENBERGER Yann','LY Faty','MERIMECHE Zora','MOUSSA OSMAN Rezan','OBEYD WAYSSI Silave','RAFAI Abderaouf','ROHM Cindy','SCHULLER Adrien','SUTTERLIN Anthony','ZAGAD Abdessamed','IMLOUL Tahar']
+  }
+};
+
+const STATUTS_POINTAGE = [
+  {v:'present', l:'✅ Présent', bg:'var(--vert-pale)', c:'var(--vert)', border:'var(--vert)'},
+  {v:'absent',  l:'⚠️ Absent',  bg:'var(--orange-pale)', c:'var(--orange)', border:'var(--orange)'},
+  {v:'malade',  l:'🤒 Malade',  bg:'#fce7f3', c:'#be185d', border:'#be185d'},
+  {v:'cp',      l:'🏖️ CP',      bg:'var(--bleu-clair)', c:'var(--bleu)', border:'var(--bleu)'},
+];
+
 async function sbFetch(method, path, body){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     method,
@@ -954,220 +971,121 @@ function renderLogin(){
 render();
 
 // ── POINTAGE ────────────────────────────────────────────────────
-function renderPointageAdmin(){
-  // Vue admin : tous les pointages en cours toutes équipes
-  const equipes = ['Aprem','Aprem','Matin'];
-  const icons = {Concentration:'☀️', Soirée:'🌆', Nuit:'🌙'};
-  return `<div class="card">
-    <div class="card-title">📋 Pointage — Vue globale</div>
-    <div class="info-banner">👁️ Vue globale de tous les pointages en cours. Démarre une vacation pour pointer ton équipe.</div>
-    ${equipes.map(eq=>{
-      // Trouver vacation en cours pour cette équipe
-      const vacEq = (S.toutesVacations||[]).find(v=>v.equipe===eq&&v.statut==='en_cours');
-      if(!vacEq) return `<div style="padding:10px 0;border-bottom:1px solid var(--gris)">
-        <div style="font-weight:700">${icons[eq]} ${eq}</div>
-        <div style="font-size:12px;color:var(--texte-doux)">Aucune vacation en cours</div>
-      </div>`;
-      const pts = (S.tousPointages||[]).filter(p=>p.vacation_id===vacEq.id);
-      const presents = pts.filter(p=>p.statut==='present');
-      const absents = pts.filter(p=>p.statut!=='present');
-      return `<div style="padding:10px 0;border-bottom:1px solid var(--gris)">
-        <div style="font-weight:700;margin-bottom:6px">${icons[eq]} ${eq}</div>
-        ${!pts.length?'<div style="font-size:12px;color:var(--texte-doux)">Pointage non encore commencé</div>':''}
-        ${presents.map(p=>{
-          const a = S.tousAgents.find(x=>x.id===p.agent_id);
-          return `<div style="font-size:13px;display:flex;justify-content:space-between;padding:3px 0">
-            <span>✅ ${a?.prenom||'?'} ${a?.nom||''}</span>
-            <span style="color:var(--texte-doux);font-size:11px">${p.heure_debut||''}${p.heure_fin?' → '+p.heure_fin:''}</span>
-          </div>`;
-        }).join('')}
-        ${absents.map(p=>{
-          const a = S.tousAgents.find(x=>x.id===p.agent_id);
-          return `<div style="font-size:13px;display:flex;justify-content:space-between;padding:3px 0">
-            <span>${p.statut==='cp'?'🏖️':'⚠️'} ${a?.prenom||'?'} ${a?.nom||''}</span>
-            <span style="font-size:11px;color:var(--texte-doux)">${p.statut==='cp'?'CP':'Absent'}</span>
-          </div>`;
-        }).join('')}
-      </div>`;
-    }).join('')}
-  </div>`;
-}
-
 async function chargerPointage(){
   try{
-    if(S.agent.equipe){
-      // Charger agents de la même équipe (hors responsables)
-      S.pointageEquipe = await db.get('agents', `equipe=eq.${encodeURIComponent(S.agent.equipe)}&order=nom.asc`);
-      // Chercher pointage en cours pour la vacation active
+    const equipe = S.agent.equipe || S.equipeAdmin || '';
+    if(equipe){
+      const groupes = PERSONNEL_EQUIPE[equipe] || {};
+      const tousNoms = Object.values(groupes).flat();
+      // Chercher pointages existants pour cette vacation
       if(S.vacationActive){
         const pts = await db.get('pointages', `vacation_id=eq.${S.vacationActive.id}&order=created_at.asc`);
-        S.pointageActif = pts.length ? pts : null;
-      }
-    }
-    // Pour admin : charger tous les pointages des vacations en cours
-    if(S.agent.est_responsable){
-      const vacsEnCours = (S.toutesVacations||[]).filter(v=>v.statut==='en_cours');
-      S.tousPointages = [];
-      for(const v of vacsEnCours){
-        const pts = await db.get('pointages',`vacation_id=eq.${v.id}&order=created_at.asc`);
-        S.tousPointages = [...S.tousPointages, ...pts];
-      }
+        S.pointageActif = pts.length ? pts : [];
+      } else { S.pointageActif = []; }
     }
   }catch(e){ console.error(e); }
 }
 
 function renderPointage(){
-  if(!S.agent.equipe && !S.agent.est_responsable && !S.agent.est_chef_equipe) return `<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div>Aucune équipe assignée. Contacte ton responsable.</div></div>`;
-  if(!S.vacationActive && !S.agent.est_responsable) return `<div class="card">
-    <div class="card-title">📋 Pointage</div>
-    <div class="info-banner">⚠️ Démarre d'abord une vacation dans l'onglet 🎙️ Vacation pour pouvoir faire le pointage.</div>
+  const equipe = S.agent.equipe || S.equipeAdmin || '';
+  if(!equipe) return `<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div>Sélectionne d'abord une équipe dans l'onglet Vacation.</div></div>`;
+  if(!S.vacationActive) return `<div class="card"><div class="empty-state"><div class="empty-icon">⏱️</div>Démarre d'abord une vacation pour accéder au pointage.</div></div>`;
+
+  const groupes = PERSONNEL_EQUIPE[equipe] || {};
+  const pts = S.pointageActif || [];
+  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+
+  let html = `<div class="card">
+    <div class="card-title">📋 Pointage — ${equipe}</div>
+    <div class="info-banner">Sélectionne le statut de chaque agent. Seuls les présents ont les champs d'heures.</div>
   </div>`;
-  // Admin sans vacation active : voir tous les pointages du jour
-  if(!S.vacationActive && S.agent.est_responsable) return renderPointageAdmin();
 
-  // Si pointage déjà commencé
-  if(S.pointageActif && S.pointageActif.length){
-    return renderPointageEnCours();
-  }
-  // Sinon afficher sélection
-  return renderPointageSelection();
-}
+  Object.entries(groupes).forEach(([groupe, noms])=>{
+    html += `<div class="card">
+      <div style="font-size:14px;font-weight:700;color:var(--bleu);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--bleu)">👥 ${groupe}</div>`;
 
-function renderPointageSelection(){
-  const agents = S.pointageEquipe||[];
-  return `<div class="card">
-    <div class="card-title">📋 Pointage — ${S.agent.equipe}</div>
-    <div class="info-banner">✅ Sélectionne les agents présents. Les absents/CP peuvent être marqués directement.</div>
-    ${!agents.length?'<div class="empty-state">Aucun agent dans cette équipe.</div>':
-    agents.map(a=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gris)">
-        <div style="font-weight:600;font-size:14px">${a.prenom} ${a.nom}</div>
-        <div style="display:flex;gap:6px">
-          <button onclick="setStatutPointage('${a.id}','present')" style="padding:6px 12px;border-radius:8px;border:2px solid ${(S.pointageSelection||{})[a.id]==='present'?'var(--vert)':'var(--gris-bord)'};background:${(S.pointageSelection||{})[a.id]==='present'?'var(--vert-pale)':'white'};color:${(S.pointageSelection||{})[a.id]==='present'?'var(--vert)':'var(--texte-doux)'};font-weight:600;font-size:12px;cursor:pointer">✅ Présent</button>
-          <button onclick="setStatutPointage('${a.id}','absent')" style="padding:6px 12px;border-radius:8px;border:2px solid ${(S.pointageSelection||{})[a.id]==='absent'?'var(--orange)':'var(--gris-bord)'};background:${(S.pointageSelection||{})[a.id]==='absent'?'var(--orange-pale)':'white'};color:${(S.pointageSelection||{})[a.id]==='absent'?'var(--orange)':'var(--texte-doux)'};font-weight:600;font-size:12px;cursor:pointer">⚠️ Absent</button>
-          <button onclick="setStatutPointage('${a.id}','cp')" style="padding:6px 12px;border-radius:8px;border:2px solid ${(S.pointageSelection||{})[a.id]==='cp'?'var(--bleu)':'var(--gris-bord)'};background:${(S.pointageSelection||{})[a.id]==='cp'?'var(--bleu-clair)':'white'};color:${(S.pointageSelection||{})[a.id]==='cp'?'var(--bleu)':'var(--texte-doux)'};font-weight:600;font-size:12px;cursor:pointer">🏖️ CP</button>
+    noms.forEach(nom=>{
+      const pt = pts.find(p=>p.nom_agent===nom) || {};
+      const statut = pt.statut || '';
+      const isPresent = statut==='present';
+
+      html += `<div style="margin-bottom:12px;padding:10px;background:var(--gris);border-radius:10px">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px">${nom}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:${isPresent?'10px':'0'}">
+          ${STATUTS_POINTAGE.map(s=>`
+            <button onclick="setStatutAgent('${nom}','${s.v}','${groupe}')"
+              style="padding:8px;border-radius:8px;border:2px solid ${statut===s.v?s.border:'var(--gris-bord)'};background:${statut===s.v?s.bg:'white'};color:${statut===s.v?s.c:'var(--texte-doux)'};font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s">
+              ${s.l}
+            </button>`).join('')}
         </div>
-      </div>`).join('')}
-    <div class="form-group" style="margin-top:14px">
-      <label class="form-label">Heure de prise de poste</label>
-      <input class="form-input" type="time" id="heure-debut-poste" value="${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}" />
-    </div>
-    <button class="btn-primary" onclick="validerPointageDebut()" style="margin-top:8px">✅ Valider le pointage de début</button>
-  </div>`;
+        ${isPresent?`
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--texte-doux);margin-bottom:4px">DÉBUT</div>
+            <input class="form-input" type="time" value="${pt.heure_debut||''}" 
+              onchange="sauvegarderHeureAgent('${nom}','heure_debut',this.value)" style="font-size:13px;padding:8px" />
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--texte-doux);margin-bottom:4px">FIN</div>
+            <input class="form-input" type="time" value="${pt.heure_fin||''}" 
+              onchange="sauvegarderHeureAgent('${nom}','heure_fin',this.value)" style="font-size:13px;padding:8px" />
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--texte-doux);margin-bottom:4px">DÉBUT PAUSE</div>
+            <input class="form-input" type="time" value="${pt.heure_debut_pause1||''}" 
+              onchange="sauvegarderHeureAgent('${nom}','heure_debut_pause1',this.value)" style="font-size:13px;padding:8px" />
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--texte-doux);margin-bottom:4px">FIN PAUSE</div>
+            <input class="form-input" type="time" value="${pt.heure_fin_pause1||''}" 
+              onchange="sauvegarderHeureAgent('${nom}','heure_fin_pause1',this.value)" style="font-size:13px;padding:8px" />
+          </div>
+        </div>`:''}
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  return html;
 }
 
-function setStatutPointage(agentId, statut){
-  if(!S.pointageSelection) S.pointageSelection={};
-  S.pointageSelection[agentId] = statut;
-  render();
-}
-
-async function validerPointageDebut(){
-  const agents = S.pointageEquipe||[];
-  const heure = document.getElementById('heure-debut-poste')?.value;
-  if(!heure) return toast("Indique l'heure de début",'err');
-  const sel = S.pointageSelection||{};
-  // Par défaut tous présents si pas sélectionné
-  const toSave = agents.map(a=>({
-    vacation_id: S.vacationActive.id,
-    agent_id: a.id,
-    equipe: S.agent.equipe || S.equipeAdmin || 'Aprem',
-    statut: sel[a.id]||'present',
-    heure_debut: sel[a.id]==='present'||(sel[a.id]===undefined) ? heure : null,
-  }));
+async function setStatutAgent(nom, statut, groupe){
   try{
-    for(const p of toSave) await db.post('pointages', p);
-    toast('✅ Pointage de début enregistré !','ok');
-    S.pointageSelection={};
-    await chargerPointage();
-    render();
-  }catch(e){ toast('Erreur: '+e.message,'err'); }
-}
-
-function renderPointageEnCours(){
-  const pts = S.pointageActif||[];
-  const presents = pts.filter(p=>p.statut==='present');
-  const absents = pts.filter(p=>p.statut!=='present');
-  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-
-  return `<div class="card">
-    <div class="card-title">📋 Pointage en cours — ${S.agent.equipe}</div>
-
-    ${presents.length?`
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--vert);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">✅ Présents (${presents.length})</div>
-      ${presents.map(p=>{
-        const agent = S.pointageEquipe.find(a=>a.id===p.agent_id);
-        return `<div style="padding:10px 0;border-bottom:1px solid var(--gris)">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <div style="font-weight:600">${agent?.prenom||'?'} ${agent?.nom||''}</div>
-            <div style="font-size:11px;color:var(--texte-doux)">Arrivée : ${p.heure_debut||'—'}</div>
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            ${!p.heure_debut_pause1?`<button onclick="enregistrerHeure('${p.id}','heure_debut_pause1','${now}')" style="padding:5px 10px;border-radius:6px;border:1.5px solid var(--orange);background:var(--orange-pale);color:var(--orange);font-size:11px;font-weight:600;cursor:pointer">☕ Début pause 1</button>`:''}
-            ${p.heure_debut_pause1&&!p.heure_fin_pause1?`<button onclick="enregistrerHeure('${p.id}','heure_fin_pause1','${now}')" style="padding:5px 10px;border-radius:6px;border:1.5px solid var(--vert);background:var(--vert-pale);color:var(--vert);font-size:11px;font-weight:600;cursor:pointer">▶️ Fin pause 1</button>`:''}
-            ${p.heure_fin_pause1&&!p.heure_debut_pause2?`<button onclick="enregistrerHeure('${p.id}','heure_debut_pause2','${now}')" style="padding:5px 10px;border-radius:6px;border:1.5px solid var(--orange);background:var(--orange-pale);color:var(--orange);font-size:11px;font-weight:600;cursor:pointer">☕ Début pause 2</button>`:''}
-            ${p.heure_debut_pause2&&!p.heure_fin_pause2?`<button onclick="enregistrerHeure('${p.id}','heure_fin_pause2','${now}')" style="padding:5px 10px;border-radius:6px;border:1.5px solid var(--vert);background:var(--vert-pale);color:var(--vert);font-size:11px;font-weight:600;cursor:pointer">▶️ Fin pause 2</button>`:''}
-            ${!p.heure_fin?`<button onclick="enregistrerHeure('${p.id}','heure_fin','${now}')" style="padding:5px 10px;border-radius:6px;border:1.5px solid var(--rouge);background:var(--rouge-pale);color:var(--rouge);font-size:11px;font-weight:600;cursor:pointer">🏁 Fin vacation</button>`:`<span style="font-size:11px;color:var(--texte-doux)">🏁 Fin: ${p.heure_fin}</span>`}
-          </div>
-          ${p.heure_debut_pause1?`<div style="font-size:11px;color:var(--texte-doux);margin-top:4px">
-            ${p.heure_debut_pause1?'☕P1: '+p.heure_debut_pause1:''} ${p.heure_fin_pause1?'→ '+p.heure_fin_pause1:''}
-            ${p.heure_debut_pause2?' | ☕P2: '+p.heure_debut_pause2:''} ${p.heure_fin_pause2?'→ '+p.heure_fin_pause2:''}
-          </div>`:''}
-        </div>`;
-      }).join('')}
-    </div>`:''}
-
-    ${absents.length?`
-    <div>
-      <div style="font-size:12px;font-weight:700;color:var(--texte-doux);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Absents / CP (${absents.length})</div>
-      ${absents.map(p=>{
-        const agent = S.pointageEquipe.find(a=>a.id===p.agent_id);
-        const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-        return `<div style="padding:10px 0;border-bottom:1px solid var(--gris)">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <span style="font-size:13px;font-weight:600">${agent?.prenom||'?'} ${agent?.nom||''}</span>
-            <span class="badge ${p.statut==='cp'?'approuve':'en_attente'}">${p.statut==='cp'?'🏖️ CP':'⚠️ Absent'}</span>
-          </div>
-          <button onclick="marquerPresent('${p.id}','${now}')" style="padding:5px 12px;border-radius:8px;border:1.5px solid var(--vert);background:var(--vert-pale);color:var(--vert);font-size:11px;font-weight:600;cursor:pointer">✅ Arrivée en retard</button>
-        </div>`;
-      }).join('')}
-    </div>`:''}
-
-    <div style="margin-top:16px">
-      <button class="btn-primary" style="background:var(--vert)" onclick="finVacationTous()">🏁 Fin de vacation pour tous les présents</button>
-    </div>
-  </div>`;
-}
-
-async function marquerPresent(pointageId, heure){
-  try{
-    await db.patch('pointages', `id=eq.${pointageId}`, {statut:'present', heure_debut:heure});
-    toast('✅ Arrivée en retard enregistrée !','ok');
-    await chargerPointage();
+    const pts = S.pointageActif || [];
+    const pt = pts.find(p=>p.nom_agent===nom);
+    const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    if(!pt){
+      const created = await db.post('pointages',{
+        vacation_id: S.vacationActive.id,
+        agent_id: S.agent.id,
+        nom_agent: nom,
+        sous_groupe: groupe,
+        equipe: S.agent.equipe || S.equipeAdmin,
+        statut,
+        heure_debut: statut==='present' ? now : null,
+      });
+      S.pointageActif.push(created[0]);
+    } else {
+      await db.patch('pointages',`id=eq.${pt.id}`,{statut, heure_debut: statut==='present'&&!pt.heure_debut ? now : pt.heure_debut});
+      pt.statut = statut;
+      if(statut==='present'&&!pt.heure_debut) pt.heure_debut = now;
+    }
     render();
   }catch(e){ toast('Erreur','err'); }
 }
 
-async function enregistrerHeure(pointageId, champ, heure){
+async function sauvegarderHeureAgent(nom, champ, valeur){
   try{
-    await db.patch('pointages', `id=eq.${pointageId}`, {[champ]: heure});
-    toast('✅ Heure enregistrée !','ok');
-    await chargerPointage();
-    render();
+    const pts = S.pointageActif || [];
+    const pt = pts.find(p=>p.nom_agent===nom);
+    if(pt){
+      await db.patch('pointages',`id=eq.${pt.id}`,{[champ]:valeur});
+      pt[champ] = valeur;
+    }
   }catch(e){ toast('Erreur','err'); }
 }
 
-async function finVacationTous(){
-  const pts = (S.pointageActif||[]).filter(p=>p.statut==='present'&&!p.heure_fin);
-  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  try{
-    for(const p of pts) await db.patch('pointages',`id=eq.${p.id}`,{heure_fin:now});
-    toast('✅ Fin de vacation enregistrée pour tous !','ok');
-    await chargerPointage();
-    render();
-  }catch(e){ toast('Erreur','err'); }
-}
 
 // ── LIAISONS STRUCTURÉES ────────────────────────────────────────
 function renderModalLiaison(){
