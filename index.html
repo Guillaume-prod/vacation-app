@@ -119,8 +119,8 @@ const TYPES_EVT = {
 };
 
 const LIAISONS_PAR_EQUIPE = {
-  'Aprem': ['Concentration 1','Concentration 2','Concentration 3','Erstein 1','Erstein 2','Erstein 3','Erstein 4','SUPP'],
-  'Matin': ['Erstein 4','Erstein 5','Erstein 6','Chronopost','SUPP'],
+  'Aprem': ['Concentration 1','Concentration 2','Concentration 3','Liaison 1','Liaison 2','Liaison 3','Liaison 4','SUPP 1','SUPP 2'],
+  'Matin': ['Liaison 3','Liaison 4','Liaison 5','Liaison 6','Liaison 7','Chrono 1','Chrono 2','SUPP 3','SUPP 4'],
 };
 
 async function sbFetch(method, path, body){
@@ -148,7 +148,7 @@ let S = {
   vacationActive:null, evenementsVacation:[], dernierCREquipePrecedente:null,
   toutesVacations:[], tousAgents:[], compteRenduActuel:null, vueCR:'categorie',
   modal:null, evtTexte:'', evtPhotos:[], loading:false, editAgentId:null, liaison:{}, liaisonsModal:[],
-  pointageEquipe:[], pointageActif:null, pointageEtape:'selection',
+  pointageEquipe:[], pointageActif:null, pointageEtape:'selection', equipeAdmin:null,
 };
 
 function dateLocale(d){const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const dd=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${dd}`;}
@@ -212,8 +212,17 @@ function renderVue(){
 
 // ── VACATION (agent) ───────────────────────────────────────────
 function renderVacation(){
-  if(!S.agent.equipe){
+  if(!S.agent.equipe && !S.agent.est_responsable){
     return `<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div>Aucune équipe ne t'a été assignée. Contacte ton responsable.</div></div>`;
+  }
+  if(!S.agent.equipe && S.agent.est_responsable){
+    return `<div class="card">
+      <div class="card-title">🎙️ Choisir une équipe pour saisir</div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button onclick="S.equipeAdmin='Aprem';chargerTout().then(render)" style="flex:1;padding:16px;border-radius:12px;border:2px solid var(--gris-bord);background:white;font-size:15px;font-weight:700;cursor:pointer">🌆 Aprem</button>
+        <button onclick="S.equipeAdmin='Matin';chargerTout().then(render)" style="flex:1;padding:16px;border-radius:12px;border:2px solid var(--gris-bord);background:white;font-size:15px;font-weight:700;cursor:pointer">☀️ Matin</button>
+      </div>
+    </div>`;
   }
 
   let html = '';
@@ -1062,7 +1071,7 @@ async function validerPointageDebut(){
   const toSave = agents.map(a=>({
     vacation_id: S.vacationActive.id,
     agent_id: a.id,
-    equipe: S.agent.equipe,
+    equipe: S.agent.equipe || S.equipeAdmin || 'Aprem',
     statut: sel[a.id]||'present',
     heure_debut: sel[a.id]==='present'||(sel[a.id]===undefined) ? heure : null,
   }));
